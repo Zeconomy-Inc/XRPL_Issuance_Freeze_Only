@@ -1,11 +1,12 @@
-import { spawn } from "node:child_process";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// api/execute.js  (CommonJS)
+const { spawn } = require("child_process");
+const path = require("path");
 
-export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).json({ error: "Use POST" });
+module.exports = async (req, res) => {
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Use POST" });
+    return;
+  }
 
   const {
     issuerSecret,
@@ -17,6 +18,7 @@ export default async function handler(req, res) {
     network,
     verbose,
   } = req.body || {};
+
   if (
     !issuerSecret ||
     !holderSecret ||
@@ -24,10 +26,12 @@ export default async function handler(req, res) {
     !amount ||
     !limit ||
     !network
-  )
-    return res.status(400).json({ error: "Missing required fields" });
+  ) {
+    res.status(400).json({ error: "Missing required fields" });
+    return;
+  }
 
-  const scriptPath = path.join(__dirname, "..", "index.cjs");
+  const scriptPath = path.join(process.cwd(), "index.cjs");
   const args = [
     scriptPath,
     "--issuer-secret",
@@ -67,11 +71,13 @@ export default async function handler(req, res) {
       stderr: safe(stderr),
     });
   });
-}
+};
+
 function safe(s) {
   const t = String(s || "").trim();
+  if (!t) return "";
   try {
-    return t ? JSON.parse(t) : "";
+    return JSON.parse(t);
   } catch {
     return t;
   }
