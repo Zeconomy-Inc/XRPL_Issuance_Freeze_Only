@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>XRPL — TrustSet + Payment Form</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #0b0f14; color: #e9eef3; margin: 0; padding: 20px; }
+    .container { max-width: 700px; margin: auto; background: #121821; padding: 30px; border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,.3); }
+    h1 { margin-top: 0; font-size: 22px; color: #e0e6ee; }
+    label { display: block; margin: 12px 0 6px; color: #c3d2e1; }
+    input, select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #2c3b51; background: #0f141c; color: #e9eef3; }
+    button { margin-top: 18px; background: #2e7aef; color: #fff; border: none; border-radius: 10px; padding: 12px 20px; font-weight: bold; cursor: pointer; }
+    button:hover { background: #1f5dc0; }
+    pre { background: #0f141c; border: 1px solid #2c3b51; padding: 12px; border-radius: 8px; margin-top: 20px; color: #b7c9dd; overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>XRPL — TrustSet + Payment (Web Form)</h1>
+    <p>Enter parameters that your CLI command would normally take. On submission, these will be sent to your backend endpoint that executes <code>node index.cjs</code> with equivalent arguments.</p>
+
+    <form id="txForm">
+      <label for="issuerSecret">Issuer Secret</label>
+      <input type="password" id="issuerSecret" name="issuerSecret" placeholder="sEd…" required />
+
+      <label for="holderSecret">Holder Secret</label>
+      <input type="password" id="holderSecret" name="holderSecret" placeholder="sEd…" required />
+
+      <label for="currencyCode">Currency Code</label>
+      <input type="text" id="currencyCode" name="currencyCode" placeholder="GDCP20251029" required />
+
+      <label for="amount">Amount</label>
+      <input type="number" id="amount" name="amount" placeholder="10000000" required />
+
+      <label for="limit">Limit</label>
+      <input type="number" id="limit" name="limit" placeholder="100000000" required />
+
+      <label for="freeze">Freeze</label>
+      <select id="freeze" name="freeze">
+        <option value="true">true</option>
+        <option value="false">false</option>
+      </select>
+
+      <label for="network">Network</label>
+      <select id="network" name="network">
+        <option value="testnet">testnet</option>
+        <option value="devnet">devnet</option>
+        <option value="mainnet">mainnet</option>
+      </select>
+
+      <label for="verbose">Verbose</label>
+      <select id="verbose" name="verbose">
+        <option value="true">true</option>
+        <option value="false">false</option>
+      </select>
+
+      <button type="submit">Submit</button>
+    </form>
+
+    <pre id="output">(waiting)</pre>
+  </div>
+
+  <script>
+    const form = document.getElementById('txForm');
+    const output = document.getElementById('output');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      output.textContent = 'Submitting...';
+      const data = {
+        issuerSecret: form.issuerSecret.value,
+        holderSecret: form.holderSecret.value,
+        currencyCode: form.currencyCode.value,
+        amount: form.amount.value,
+        limit: form.limit.value,
+        freeze: form.freeze.value === 'true',
+        network: form.network.value,
+        verbose: form.verbose.value === 'true'
+      };
+
+      try {
+        const res = await fetch('/api/xrpl/execute', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const json = await res.json();
+        output.textContent = JSON.stringify(json, null, 2);
+      } catch (err) {
+        output.textContent = 'Error: ' + err.message;
+      }
+    });
+  </script>
+</body>
+</html>
