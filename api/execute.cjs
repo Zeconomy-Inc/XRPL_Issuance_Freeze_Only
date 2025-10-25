@@ -1,5 +1,8 @@
-// api/xrpl/execute.js
 import { spawn } from "node:child_process";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -30,8 +33,11 @@ export default async function handler(req, res) {
     return;
   }
 
+  // Ensure we point to the script file packaged with the deployment
+  const scriptPath = path.join(__dirname, "..", "index.cjs");
+
   const args = [
-    "index.cjs",
+    scriptPath,
     "--issuer-secret",
     issuerSecret,
     "--holder-secret",
@@ -49,7 +55,7 @@ export default async function handler(req, res) {
   ];
   if (verbose) args.push("--verbose");
 
-  const child = spawn("node", args, { cwd: process.cwd(), env: process.env });
+  const child = spawn("node", args, { env: process.env });
 
   let stdout = "",
     stderr = "";
@@ -59,17 +65,16 @@ export default async function handler(req, res) {
   child.stderr.on("data", (d) => {
     stderr += d.toString();
   });
+
   child.on("error", (err) => {
     res.status(500).json({ error: "Spawn error", detail: String(err) });
   });
+
   child.on("close", (code) => {
-    // Try to JSON-parse script output; otherwise return as text
-    const parsedOut = safeParse(stdout);
-    const parsedErr = safeParse(stderr);
     res.status(code === 0 ? 200 : 422).json({
       code,
-      stdout: parsedOut,
-      stderr: parsedErr,
+      stdout: safeParse(stdout),
+      stderr: safeParse(stderr),
     });
   });
 }
