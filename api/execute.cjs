@@ -5,10 +5,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    res.status(405).json({ error: "Use POST" });
-    return;
-  }
+  if (req.method !== "POST") return res.status(405).json({ error: "Use POST" });
 
   const {
     issuerSecret,
@@ -20,7 +17,6 @@ export default async function handler(req, res) {
     network,
     verbose,
   } = req.body || {};
-
   if (
     !issuerSecret ||
     !holderSecret ||
@@ -28,14 +24,10 @@ export default async function handler(req, res) {
     !amount ||
     !limit ||
     !network
-  ) {
-    res.status(400).json({ error: "Missing required fields" });
-    return;
-  }
+  )
+    return res.status(400).json({ error: "Missing required fields" });
 
-  // Ensure we point to the script file packaged with the deployment
   const scriptPath = path.join(__dirname, "..", "index.cjs");
-
   const args = [
     scriptPath,
     "--issuer-secret",
@@ -65,25 +57,21 @@ export default async function handler(req, res) {
   child.stderr.on("data", (d) => {
     stderr += d.toString();
   });
-
-  child.on("error", (err) => {
-    res.status(500).json({ error: "Spawn error", detail: String(err) });
-  });
-
+  child.on("error", (err) =>
+    res.status(500).json({ error: "Spawn error", detail: String(err) })
+  );
   child.on("close", (code) => {
     res.status(code === 0 ? 200 : 422).json({
       code,
-      stdout: safeParse(stdout),
-      stderr: safeParse(stderr),
+      stdout: safe(stdout),
+      stderr: safe(stderr),
     });
   });
 }
-
-function safeParse(s) {
+function safe(s) {
   const t = String(s || "").trim();
-  if (!t) return "";
   try {
-    return JSON.parse(t);
+    return t ? JSON.parse(t) : "";
   } catch {
     return t;
   }
