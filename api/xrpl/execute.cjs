@@ -1,97 +1,85 @@
-// api/xrpl/execute.cjs
-const { spawn } = require("child_process");
+// api/xrpl/execute.js
+import { spawn } from "node:child_process";
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Use POST" });
     return;
   }
 
-  try {
-    const {
-      issuerSecret,
-      holderSecret,
-      currencyCode,
-      amount,
-      limit,
-      freeze,
-      network,
-      verbose,
-    } = req.body || {};
+  const {
+    issuerSecret,
+    holderSecret,
+    currencyCode,
+    amount,
+    limit,
+    freeze,
+    network,
+    verbose,
+  } = req.body || {};
 
-    // Minimal validation – lock to expected flags only
-    if (
-      !issuerSecret ||
-      !holderSecret ||
-      !currencyCode ||
-      !amount ||
-      !limit ||
-      !network
-    ) {
-      res.status(400).json({ error: "Missing required fields" });
-      return;
-    }
-
-    // Build CLI args exactly like your command
-    const args = [
-      "index.cjs",
-      "--issuer-secret",
-      issuerSecret,
-      "--holder-secret",
-      holderSecret,
-      "--currency-code",
-      String(currencyCode),
-      "--amount",
-      String(amount),
-      "--limit",
-      String(limit),
-      "--freeze",
-      String(Boolean(freeze)),
-      "--network",
-      String(network),
-    ];
-
-    if (verbose) args.push("--verbose");
-
-    const child = spawn("node", args, {
-      cwd: process.cwd(),
-      env: process.env,
-    });
-
-    let stdout = "";
-    let stderr = "";
-
-    child.stdout.on("data", (d) => {
-      stdout += d.toString();
-    });
-    child.stderr.on("data", (d) => {
-      stderr += d.toString();
-    });
-
-    child.on("error", (err) => {
-      res.status(500).json({ error: "Spawn error", detail: String(err) });
-    });
-
-    child.on("close", (code) => {
-      const payload = {
-        code,
-        stdout: tryParseJson(stdout),
-        stderr: tryParseJson(stderr),
-      };
-      // Treat non-zero exit as 422 to bubble script failures
-      res.status(code === 0 ? 200 : 422).json(payload);
-    });
-  } catch (e) {
-    res.status(500).json({ error: "Handler exception", detail: String(e) });
+  if (
+    !issuerSecret ||
+    !holderSecret ||
+    !currencyCode ||
+    !amount ||
+    !limit ||
+    !network
+  ) {
+    res.status(400).json({ error: "Missing required fields" });
+    return;
   }
-};
 
-function tryParseJson(txt) {
-  const s = String(txt || "").trim();
-  if (!s) return "";
+  const args = [
+    "index.cjs",
+    "--issuer-secret",
+    issuerSecret,
+    "--holder-secret",
+    holderSecret,
+    "--currency-code",
+    String(currencyCode),
+    "--amount",
+    String(amount),
+    "--limit",
+    String(limit),
+    "--freeze",
+    String(Boolean(freeze)),
+    "--network",
+    String(network),
+  ];
+  if (verbose) args.push("--verbose");
+
+  const child = spawn("node", args, { cwd: process.cwd(), env: process.env });
+
+  let stdout = "",
+    stderr = "";
+  child.stdout.on("data", (d) => {
+    stdout += d.toString();
+  });
+  child.stderr.on("data", (d) => {
+    stderr += d.toString();
+  });
+  child.on("error", (err) => {
+    res.status(500).json({ error: "Spawn error", detail: String(err) });
+  });
+  child.on("close", (code) => {
+    // Try to JSON-parse script output; otherwise return as text
+    const parsedOut = safeParse(stdout);
+    const parsedErr = safeParse(stderr);
+    res.status(code === 0 ? 200 : 422).json({
+      code,
+      stdout: parsedOut,
+      stderr: parsedErr,
+    });
+  });
+}
+
+function safeParse(s) {
+  const t = String(s || "").trim();
+  if (!t) return "";
   try {
-    return JSON.parse(s);
+    return JSON.parse(t);
   } catch {
-    return s;
+    return t;
   }
 }
