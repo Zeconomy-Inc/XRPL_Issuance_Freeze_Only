@@ -1,12 +1,12 @@
-// api/execute.js  (CommonJS)
+// api/xrpl/execute/index.js
 const { spawn } = require("child_process");
 const path = require("path");
 
 module.exports = async (req, res) => {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Use POST' });
-  res.status(200).json({ ok: true });
-};
-
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Use POST" });
+    return;
+  }
 
   const {
     issuerSecret,
