@@ -80,8 +80,11 @@ form.addEventListener('submit', async (e) => {
   };
 
   try {
-    const res = await fetch('/api/xrpl/execute', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(data) })
-
+    const res = await fetch('/api/xrpl/execute.js', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
 
     const contentType = res.headers.get('content-type') || '';
     const raw = await res.text();
