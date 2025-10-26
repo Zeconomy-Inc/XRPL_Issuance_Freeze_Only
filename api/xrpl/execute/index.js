@@ -27,6 +27,7 @@ module.exports = async (req, res) => {
 
   // point to the script sitting *next to* this file
   const scriptPath = path.join(__dirname, "index.cjs");
+  console.log("scriptPath:", scriptPath);
 
   const args = [
     scriptPath,
