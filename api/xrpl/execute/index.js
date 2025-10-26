@@ -3,10 +3,7 @@ const { spawn } = require("child_process");
 const path = require("path");
 
 module.exports = async (req, res) => {
-  if (req.method !== "POST") {
-    res.status(405).json({ error: "Use POST" });
-    return;
-  }
+  if (req.method !== "POST") return res.status(405).json({ error: "Use POST" });
 
   const {
     issuerSecret,
@@ -18,7 +15,6 @@ module.exports = async (req, res) => {
     network,
     verbose,
   } = req.body || {};
-
   if (
     !issuerSecret ||
     !holderSecret ||
@@ -26,12 +22,12 @@ module.exports = async (req, res) => {
     !amount ||
     !limit ||
     !network
-  ) {
-    res.status(400).json({ error: "Missing required fields" });
-    return;
-  }
+  )
+    return res.status(400).json({ error: "Missing required fields" });
 
-  const scriptPath = path.join(process.cwd(), "index.cjs");
+  // point to the script sitting *next to* this file
+  const scriptPath = path.join(__dirname, "index.cjs");
+
   const args = [
     scriptPath,
     "--issuer-secret",
@@ -61,6 +57,7 @@ module.exports = async (req, res) => {
   child.stderr.on("data", (d) => {
     stderr += d.toString();
   });
+
   child.on("error", (err) =>
     res.status(500).json({ error: "Spawn error", detail: String(err) })
   );
@@ -75,9 +72,8 @@ module.exports = async (req, res) => {
 
 function safe(s) {
   const t = String(s || "").trim();
-  if (!t) return "";
   try {
-    return JSON.parse(t);
+    return t ? JSON.parse(t) : "";
   } catch {
     return t;
   }
