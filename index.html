@@ -81,7 +81,7 @@
 
       try {
         // match the function route shown in Vercel functions list
-        const res = await fetch('/api/xrpl/execute.cjs', {
+        const res = await fetch('/api/xrpl/execute', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)

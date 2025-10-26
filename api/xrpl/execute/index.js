@@ -26,7 +26,7 @@ module.exports = async (req, res) => {
     return res.status(400).json({ error: "Missing required fields" });
 
   // point to the script sitting *next to* this file
-  const scriptPath = path.join(__dirname, "index.cjs");
+  const scriptPath = path.join(__dirname, "runner.cjs");
   console.log("scriptPath:", scriptPath);
 
   const args = [
