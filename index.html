@@ -5,69 +5,162 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>XRPL — TrustSet + Payment Form</title>
   <style>
-    body { font-family: system-ui, sans-serif; background: #0b0f14; color: #e9eef3; margin: 0; padding: 20px; }
-    .container { max-width: 700px; margin: auto; background: #121821; padding: 30px; border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,.3); }
-    h1 { margin-top: 0; font-size: 22px; color: #e0e6ee; }
-    label { display: block; margin: 12px 0 6px; color: #c3d2e1; }
-    input, select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #2c3b51; background: #0f141c; color: #e9eef3; }
-    button { margin-top: 18px; background: #2e7aef; color: #fff; border: none; border-radius: 10px; padding: 12px 20px; font-weight: bold; cursor: pointer; }
-    button:hover { background: #1f5dc0; }
-    pre { background: #0f141c; border: 1px solid #2c3b51; padding: 12px; border-radius: 8px; margin-top: 20px; color: #b7c9dd; overflow-x: auto; }
+    :root {
+      --bg: #0b0f14; --card: #121821; --ink: #e9eef3; --muted: #9fb0c0; --line:#233042;
+      --accent: #2e7aef; --accent-2:#1f5dc0; --ok:#1fbf75; --err:#d9415a; --warn:#f4b740;
+    }
+    * { box-sizing: border-box; }
+    body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif; background: var(--bg); color: var(--ink); margin: 0; padding: 24px; }
+    .container { max-width: 980px; margin: auto; background: var(--card); padding: 28px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,.35); border: 1px solid var(--line); }
+    h1 { margin: 0 0 4px; font-size: 24px; }
+    p.sub { margin: 0 0 18px; color: var(--muted); }
+
+    form { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
+    fieldset { grid-column: 1 / -1; border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+    legend { padding: 0 8px; color: #cfe1f5; font-size: 13px; }
+
+    .col-6 { grid-column: span 6; }
+    .col-4 { grid-column: span 4; }
+    .col-3 { grid-column: span 3; }
+    .col-12 { grid-column: span 12; }
+    @media (max-width: 760px) { .col-6, .col-4, .col-3 { grid-column: span 12; } }
+
+    label { display: block; margin-bottom: 6px; color: #c3d2e1; font-size: 13px; }
+    input, select, textarea { width: 100%; padding: 12px 12px; border-radius: 12px; border: 1px solid #2c3b51; background: #0f141c; color: var(--ink); outline: none; }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(46,122,239,.18); }
+
+    .row { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
+    .hint { color: var(--muted); font-size: 12px; margin-top: 6px; }
+
+    .controls { grid-column: 1 / -1; display: flex; gap: 12px; align-items: center; justify-content: flex-start; flex-wrap: wrap; margin-top: 4px; }
+    button { background: var(--accent); color: #fff; border: 0; padding: 12px 16px; border-radius: 12px; font-weight: 700; cursor: pointer; }
+    button:hover { background: var(--accent-2); }
+    button.ghost { background: transparent; border: 1px solid var(--line); color: var(--ink); }
+    button.danger { background: var(--err); }
+
+    .banner { grid-column: 1 / -1; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: #0e1620; display: none; }
+    .banner.ok { display: block; border-color: #1a6f48; }
+    .banner.err { display: block; border-color: #7a2431; }
+
+    pre { background: #0b0f14; border: 1px solid var(--line); padding: 12px; border-radius: 12px; overflow: auto; margin-top: 16px; }
+
+    .secret-wrap { position: relative; }
+    .reveal { position: absolute; right: 8px; top: 34px; font-size: 12px; background: #17202b; border: 1px solid var(--line); padding: 6px 8px; border-radius: 10px; cursor: pointer; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>XRPL — TrustSet + Payment (Web Form)</h1>
-    <p>Enter parameters that your CLI command would normally take. On submission, these will be sent to your backend endpoint that executes <code>node index.cjs</code> with equivalent arguments.</p>
+    <h1>XRPL — TrustSet + Payment</h1>
+    <p class="sub">Fill the fields, submit, and the server will run your script. Two-column layout on desktop; stacks on mobile.</p>
 
     <form id="txForm">
-      <label for="issuerSecret">Issuer Secret</label>
-      <input type="password" id="issuerSecret" name="issuerSecret" placeholder="sEd…" required />
+      <fieldset>
+        <legend>Secrets</legend>
+        <div class="row">
+          <div class="col-6 secret-wrap">
+            <label for="issuerSecret">Issuer Secret</label>
+            <input type="password" id="issuerSecret" name="issuerSecret" placeholder="sEd…" required />
+            <button type="button" class="reveal" data-toggle="issuerSecret">Show</button>
+          </div>
+          <div class="col-6 secret-wrap">
+            <label for="holderSecret">Holder Secret</label>
+            <input type="password" id="holderSecret" name="holderSecret" placeholder="sEd…" required />
+            <button type="button" class="reveal" data-toggle="holderSecret">Show</button>
+          </div>
+          <div class="col-12 hint">For production, avoid seeds in browsers. Prefer HSM, hardware wallet, or mobile signing.
+          </div>
+        </div>
+      </fieldset>
 
-      <label for="holderSecret">Holder Secret</label>
-      <input type="password" id="holderSecret" name="holderSecret" placeholder="sEd…" required />
+      <fieldset>
+        <legend>Token & TrustLine</legend>
+        <div class="row">
+          <div class="col-6">
+            <label for="currencyCode">Currency Code</label>
+            <input type="text" id="currencyCode" name="currencyCode" placeholder="GDCP20251029" required />
+          </div>
+          <div class="col-3">
+            <label for="amount">Amount</label>
+            <input type="number" id="amount" name="amount" placeholder="10000000" required />
+          </div>
+          <div class="col-3">
+            <label for="limit">Trust Limit</label>
+            <input type="number" id="limit" name="limit" placeholder="100000000" required />
+          </div>
+          <div class="col-6">
+            <label for="freeze">Freeze after payment?</label>
+            <select id="freeze" name="freeze">
+              <option value="true">true</option>
+              <option value="false">false</option>
+            </select>
+          </div>
+        </div>
+      </fieldset>
 
-      <label for="currencyCode">Currency Code</label>
-      <input type="text" id="currencyCode" name="currencyCode" placeholder="GDCP20251029" required />
+      <fieldset>
+        <legend>Network</legend>
+        <div class="row">
+          <div class="col-4">
+            <label for="network">Network</label>
+            <select id="network" name="network">
+              <option value="testnet">testnet</option>
+              <option value="devnet">devnet</option>
+              <option value="mainnet">mainnet</option>
+            </select>
+          </div>
+          <div class="col-4">
+            <label for="verbose">Verbose</label>
+            <select id="verbose" name="verbose">
+              <option value="true">true</option>
+              <option value="false">false</option>
+            </select>
+          </div>
+        </div>
+      </fieldset>
 
-      <label for="amount">Amount</label>
-      <input type="number" id="amount" name="amount" placeholder="10000000" required />
+      <div class="controls">
+        <button id="submitBtn" type="submit">Submit</button>
+        <button id="resetBtn" type="button" class="ghost">Reset</button>
+      </div>
 
-      <label for="limit">Limit</label>
-      <input type="number" id="limit" name="limit" placeholder="100000000" required />
+      <div id="banner" class="banner"></div>
 
-      <label for="freeze">Freeze</label>
-      <select id="freeze" name="freeze">
-        <option value="true">true</option>
-        <option value="false">false</option>
-      </select>
-
-      <label for="network">Network</label>
-      <select id="network" name="network">
-        <option value="testnet">testnet</option>
-        <option value="devnet">devnet</option>
-        <option value="mainnet">mainnet</option>
-      </select>
-
-      <label for="verbose">Verbose</label>
-      <select id="verbose" name="verbose">
-        <option value="true">true</option>
-        <option value="false">false</option>
-      </select>
-
-      <button type="submit">Submit</button>
+      <pre id="output" class="col-12">(waiting)</pre>
     </form>
-
-    <pre id="output">(waiting)</pre>
   </div>
 
   <script>
     const form = document.getElementById('txForm');
     const output = document.getElementById('output');
+    const banner = document.getElementById('banner');
+    const submitBtn = document.getElementById('submitBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    // Show/hide secrets
+    document.querySelectorAll('.reveal').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-toggle');
+        const input = document.getElementById(id);
+        const type = input.type === 'password' ? 'text' : 'password';
+        input.type = type;
+        btn.textContent = type === 'password' ? 'Show' : 'Hide';
+      });
+    });
+
+    resetBtn?.addEventListener('click', () => {
+      form.reset();
+      output.textContent = '(waiting)';
+      banner.className = 'banner';
+      banner.textContent = '';
+    });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      output.textContent = 'Submitting...';
+      banner.className = 'banner';
+      banner.textContent = '';
+      output.textContent = 'Submitting…';
+      submitBtn.disabled = true;
+
       const data = {
         issuerSecret: form.issuerSecret.value,
         holderSecret: form.holderSecret.value,
@@ -80,8 +173,7 @@
       };
 
       try {
-        // match the function route shown in Vercel functions list
-        const res = await fetch('/api/xrpl/execute', {
+        const res = await fetch('/api/xrpl/execute', { // extensionless route (preferred)
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
@@ -89,24 +181,24 @@
 
         const contentType = res.headers.get('content-type') || '';
         const raw = await res.text();
-
-        let parsed;
-        if (contentType.includes('application/json')) {
-          try { parsed = JSON.parse(raw); } catch (_) { parsed = { parseError: true, raw }; }
-        } else {
-          parsed = raw;
-        }
+        const parsed = contentType.includes('application/json') ? (JSON.parse(raw || '{}')) : raw;
 
         if (!res.ok) {
-          output.textContent = typeof parsed === 'string'
-            ? `HTTP ${res.status} ${res.statusText}\n\n${parsed}`
-            : JSON.stringify({ status: res.status, statusText: res.statusText, body: parsed }, null, 2);
+          banner.className = 'banner err';
+          banner.textContent = `HTTP ${res.status} ${res.statusText}`;
+          output.textContent = typeof parsed === 'string' ? raw : JSON.stringify(parsed, null, 2);
           return;
         }
 
-        output.textContent = typeof parsed === 'string' ? parsed : JSON.stringify(parsed, null, 2);
+        banner.className = 'banner ok';
+        banner.textContent = 'Success';
+        output.textContent = typeof parsed === 'string' ? raw : JSON.stringify(parsed, null, 2);
       } catch (err) {
+        banner.className = 'banner err';
+        banner.textContent = 'Network error';
         output.textContent = 'Network/Fetch error: ' + (err?.message || err);
+      } finally {
+        submitBtn.disabled = false;
       }
     });
   </script>
