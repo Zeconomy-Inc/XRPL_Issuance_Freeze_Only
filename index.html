@@ -63,54 +63,52 @@
 
   <script>
     const form = document.getElementById('txForm');
-const output = document.getElementById('output');
+    const output = document.getElementById('output');
 
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  output.textContent = 'Submitting...';
-  const data = {
-    issuerSecret: form.issuerSecret.value,
-    holderSecret: form.holderSecret.value,
-    currencyCode: form.currencyCode.value,
-    amount: form.amount.value,
-    limit: form.limit.value,
-    freeze: form.freeze.value === 'true',
-    network: form.network.value,
-    verbose: form.verbose.value === 'true'
-  };
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      output.textContent = 'Submitting...';
+      const data = {
+        issuerSecret: form.issuerSecret.value,
+        holderSecret: form.holderSecret.value,
+        currencyCode: form.currencyCode.value,
+        amount: form.amount.value,
+        limit: form.limit.value,
+        freeze: form.freeze.value === 'true',
+        network: form.network.value,
+        verbose: form.verbose.value === 'true'
+      };
 
-  try {
-    const res = await fetch('/api/xrpl/execute.cjs', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
+      try {
+        // match the function route shown in Vercel functions list
+        const res = await fetch('/api/xrpl/execute.cjs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        const contentType = res.headers.get('content-type') || '';
+        const raw = await res.text();
+
+        let parsed;
+        if (contentType.includes('application/json')) {
+          try { parsed = JSON.parse(raw); } catch (_) { parsed = { parseError: true, raw }; }
+        } else {
+          parsed = raw;
+        }
+
+        if (!res.ok) {
+          output.textContent = typeof parsed === 'string'
+            ? `HTTP ${res.status} ${res.statusText}\n\n${parsed}`
+            : JSON.stringify({ status: res.status, statusText: res.statusText, body: parsed }, null, 2);
+          return;
+        }
+
+        output.textContent = typeof parsed === 'string' ? parsed : JSON.stringify(parsed, null, 2);
+      } catch (err) {
+        output.textContent = 'Network/Fetch error: ' + (err?.message || err);
+      }
     });
-
-    const contentType = res.headers.get('content-type') || '';
-    const raw = await res.text();
-
-    // Try to parse JSON only if content-type claims JSON; otherwise show text
-    let parsed;
-    if (contentType.includes('application/json')) {
-      try { parsed = JSON.parse(raw); } catch (_) { parsed = { parseError: true, raw }; }
-    } else {
-      parsed = raw;
-    }
-
-    if (!res.ok) {
-      output.textContent = typeof parsed === 'string'
-        ? `HTTP ${res.status} ${res.statusText}
-
-${parsed}`
-        : JSON.stringify({ status: res.status, statusText: res.statusText, body: parsed }, null, 2);
-      return;
-    }
-
-    output.textContent = typeof parsed === 'string' ? parsed : JSON.stringify(parsed, null, 2);
-  } catch (err) {
-    output.textContent = 'Network/Fetch error: ' + (err?.message || err);
-  }
-});
-</script>
+  </script>
 </body>
 </html>
