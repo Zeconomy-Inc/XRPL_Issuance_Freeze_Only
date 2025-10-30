@@ -44769,15 +44769,12 @@ var require_npm = __commonJS({
 var import_xrpl2 = __toESM(require_npm(), 1);
 
 // src/cli.js
-//var NETWORKS = {
-//  testnet: "wss://s.altnet.rippletest.net:51233",
-//  devnet: "wss://s.devnet.rippletest.net:51233",
-//  mainnet: "wss://xrplcluster.com/"
-//};
 var NETWORKS = {
-  testnet: "https://s.altnet.rippletest.net:51234/",
-  mainnet: "https://xrplcluster.com/",
+  mainnet1:"wss://sparkling-winter-wind.xrp-mainnet.quiknode.pro/8c9ff2d4ce407cd3f6a0b3ba5484963ee5cad831/"
+  mainnet2:"wss://xrplcluster.com/"
+  testnet: "wss://s.altnet.rippletest.net:51233",  
 };
+
 var HEX_CURRENCY_REGEX = /^[A-F0-9]{40}$/i;
 var ASCII_PRINTABLE_REGEX = /^[\x20-\x7E]+$/;
 var THREE_CHAR_CODE_REGEX = /^[A-Z0-9]{3}$/;
