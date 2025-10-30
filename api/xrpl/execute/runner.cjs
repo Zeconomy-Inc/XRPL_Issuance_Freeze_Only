@@ -44770,9 +44770,10 @@ var import_xrpl2 = __toESM(require_npm(), 1);
 
 // src/cli.js
 var NETWORKS = {
-  mainnet1:"wss://sparkling-winter-wind.xrp-mainnet.quiknode.pro/8c9ff2d4ce407cd3f6a0b3ba5484963ee5cad831/"
-  mainnet2:"wss://xrplcluster.com/"
-  testnet: "wss://s.altnet.rippletest.net:51233",  
+  mainnet1:
+    "wss://sparkling-winter-wind.xrp-mainnet.quiknode.pro/8c9ff2d4ce407cd3f6a0b3ba5484963ee5cad831/",
+  mainnet2: "wss://xrplcluster.com/",
+  testnet: "wss://s.altnet.rippletest.net:51233",
 };
 
 var HEX_CURRENCY_REGEX = /^[A-F0-9]{40}$/i;
