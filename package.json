@@ -1,15 +1,7 @@
 {
-  "name": "xrpl-form",
+  "name": "xrpl_issuance_freeze_only",
   "private": true,
-  "type": "commonjs",
   "scripts": {
-    "dev": "vercel dev",
-    "start": "serve public",
-    "deploy": "vercel --prod"
-  },
-  "engines": {
-    "node": ">=20"
-  },
-  "dependencies": {},
-  "devDependencies": {}
+    "start": "serve -p 3000 ."
+  }
 }

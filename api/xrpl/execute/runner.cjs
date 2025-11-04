@@ -44784,6 +44784,7 @@ function parseArguments() {
   const parsed = {
     issuerSecret: null,
     holderSecret: null,
+    holderAddress: null,
     currencyCode: null,
     currencyDisplay: null,
     currencyIsHex: false,
@@ -44803,6 +44804,10 @@ function parseArguments() {
         break;
       case "--holder-secret":
         parsed.holderSecret = value;
+        i++;
+        break;
+      case "--holder-address":
+        parsed.holderAddress = value;
         i++;
         break;
       case "--currency-code":
@@ -44939,6 +44944,7 @@ USAGE:
 REQUIRED OPTIONS:
   --issuer-secret <seed>      Issuer's private key (seed format)
   --holder-secret <seed>      Holder's private key (seed format) 
+  --holder-address rXXXXXXXXXXXXXXXXXXXXXXXXXXXX   (mutually exclusive with --holder-secret)
   --currency-code <code>      3-character currency code (e.g., USD, EUR, BTC)
   --amount <number>           Amount of tokens to issue
   --limit <number>            Trust limit (maximum holder can hold)
@@ -45021,48 +45027,70 @@ var logger = {
 };
 
 // src/transactions.js
-async function createTrustline(
+async function createTrustline({
   client,
-  holderWallet,
+  holderWallet, // nullable
+  holderAddress,
   issuerAddress,
   currencyCode,
   limit,
-  verbose = false
-) {
-  try {
-    const trustSet = {
-      TransactionType: "TrustSet",
-      Account: holderWallet.address,
-      LimitAmount: {
-        currency: currencyCode,
-        issuer: issuerAddress,
-        value: limit.toString(),
-      },
-    };
-    if (verbose) {
-      logger.debug("TrustSet Transaction:");
-      logger.debug(JSON.stringify(trustSet, null, 2));
-    }
-    const prepared = await client.autofill(trustSet);
-    const signed = holderWallet.sign(prepared);
-    if (verbose) {
-      logger.debug("Signed Transaction:");
-      logger.debug(JSON.stringify(signed, null, 2));
-    }
-    const result = await client.submitAndWait(signed.tx_blob);
-    if (result.result.meta.TransactionResult !== "tesSUCCESS") {
+}) {
+  const currencyHex = toCurrencyHex(currencyCode);
+
+  // Helper: check whether a line already exists from holder -> issuer for this currency
+  async function trustlineExists() {
+    const resp = await client.request({
+      command: "account_lines",
+      account: holderAddress,
+      peer: issuerAddress,
+    });
+    const lines = resp.result?.lines || [];
+    return lines.some((l) => (l.currency || "").toUpperCase() === currencyHex);
+  }
+
+  if (!holderWallet) {
+    // Issue-only mode: we cannot create the holder's TrustSet without their key.
+    const exists = await trustlineExists();
+    if (!exists) {
       throw new Error(
-        `TrustSet failed: ${result.result.meta.TransactionResult}`
+        `Trustline not found/authorized: holder ${holderAddress} -> issuer ${issuerAddress} for ${currencyHex}. ` +
+          `Have the investor sign a TrustSet first (Crossmark/Xumm/Xaman).`
       );
     }
-    return {
-      hash: result.result.hash,
-      result: result.result.meta.TransactionResult,
-    };
-  } catch (error) {
-    throw new Error(`Failed to create trustline: ${error.message}`);
+    return { mode: "verified" };
   }
+
+  // Classic mode: we can sign as the holder and create the line if missing.
+  const already = await trustlineExists();
+  if (already) return { mode: "verified" };
+
+  const tx = {
+    TransactionType: "TrustSet",
+    Account: holderWallet.address,
+    LimitAmount: {
+      currency: currencyHex,
+      issuer: issuerAddress,
+      value: String(limit),
+    },
+    // Add Flags here if you need them, e.g. tfSetNoRipple, tfSetAuth, etc.
+    // Flags: 0x00020000 // tfSetNoRipple (example)
+  };
+
+  const prepared = await client.autofill(tx);
+  const signed = holderWallet.sign(prepared);
+  const result = await client.submitAndWait(signed.tx_blob);
+
+  // Optional: sanity check the line now exists
+  const ok = await trustlineExists();
+  if (!ok) {
+    throw new Error(
+      "Trustline submission succeeded but verification failed. Check ledger state."
+    );
+  }
+
+  return { mode: "created", txResult: result };
 }
+
 async function issueTokens(
   client,
   issuerWallet,
@@ -45075,11 +45103,11 @@ async function issueTokens(
     const payment = {
       TransactionType: "Payment",
       Account: issuerWallet.address,
-      Destination: holderAddress,
+      Destination: holderClassic, // <-- important
       Amount: {
-        currency: currencyCode,
-        value: amount.toString(),
+        currency: currencyHex,
         issuer: issuerWallet.address,
+        value: String(args.amount),
       },
     };
     if (verbose) {
@@ -45106,51 +45134,67 @@ async function issueTokens(
     throw new Error(`Failed to issue tokens: ${error.message}`);
   }
 }
-async function freezeTrustline(
+async function freezeTrustline({
   client,
   issuerWallet,
   holderAddress,
   currencyCode,
-  verbose = false
-) {
-  try {
-    const trustSet = {
-      TransactionType: "TrustSet",
-      Account: issuerWallet.address,
-      LimitAmount: {
-        currency: currencyCode,
-        issuer: holderAddress,
-        value: "0",
-      },
-      Flags: import_xrpl.default.TrustSetFlags.tfSetFreeze,
-    };
-    if (verbose) {
-      logger.debug("Freeze TrustSet Transaction:");
-      logger.debug(JSON.stringify(trustSet, null, 2));
-    }
-    const prepared = await client.autofill(trustSet);
-    const signed = issuerWallet.sign(prepared);
-    if (verbose) {
-      logger.debug("Signed Transaction:");
-      logger.debug(JSON.stringify(signed, null, 2));
-    }
-    const result = await client.submitAndWait(signed.tx_blob);
-    if (result.result.meta.TransactionResult !== "tesSUCCESS") {
-      throw new Error(`Freeze failed: ${result.result.meta.TransactionResult}`);
-    }
-    return {
-      hash: result.result.hash,
-      result: result.result.meta.TransactionResult,
-    };
-  } catch (error) {
-    throw new Error(`Failed to freeze trustline: ${error.message}`);
-  }
+  freeze = true,
+}) {
+  const currencyHex = toCurrencyHex(currencyCode);
+  const TF_SET_FREEZE = 0x00100000;
+  const TF_CLEAR_FREEZE = 0x00200000;
+
+  const tx = {
+    TransactionType: "TrustSet",
+    Account: issuerWallet.address,
+    Flags: freeze ? TF_SET_FREEZE : TF_CLEAR_FREEZE,
+    // IMPORTANT: when the ISSUER freezes, LimitAmount.issuer = HOLDER address
+    LimitAmount: {
+      currency: currencyHex,
+      issuer: holderAddress,
+      value: "0",
+    },
+  };
+
+  const prepared = await client.autofill(tx);
+  const signed = issuerWallet.sign(prepared);
+  return client.submitAndWait(signed.tx_blob);
 }
 
+/* --------- helpers ---------- */
+
+/**
+ * Convert 3–20 ASCII currency to 160-bit hex (padded), or pass through 40-hex.
+ * @param {string} code
+ * @returns {string} 40-hex uppercase
+ */
+function toCurrencyHex(code) {
+  const hex40 = /^[A-Fa-f0-9]{40}$/;
+  if (hex40.test(code)) return code.toUpperCase();
+  const buf = Buffer.alloc(20); // 160-bit
+  Buffer.from(String(code), "utf8").copy(buf);
+  return buf.toString("hex").toUpperCase();
+}
 // index.js
 async function main() {
   try {
     const args = parseArguments();
+    if (args.holderSecret && args.holderAddress) {
+      throw new Error("Provide only one: --holder-secret OR --holder-address");
+    }
+    if (!args.holderSecret && !args.holderAddress) {
+      throw new Error(
+        "Missing investor credential: pass --holder-secret or --holder-address"
+      );
+    }
+    const issuerOnly = !!args.holderAddress && !args.holderSecret;
+    if (!issuerOnly && !args.limit) {
+      throw new Error(
+        "Missing --limit (needed when creating trustline in classic mode)"
+      );
+    }
+
     validateInputs(args);
     const currencyLabel = args.currencyDisplay ?? args.currencyCode;
     logger.info("=".repeat(60));
@@ -45169,24 +45213,46 @@ async function main() {
     const client = new import_xrpl2.default.Client(args.network);
     await client.connect();
     logger.success(`Connected to ${args.network}`);
-    const issuerWallet = import_xrpl2.default.Wallet.fromSeed(
+    /*const issuerWallet = import_xrpl2.default.Wallet.fromSeed(
       args.issuerSecret
     );
     logger.info(`Issuer Address: ${issuerWallet.address}`);
-    const holderWallet = import_xrpl2.default.Wallet.fromSeed(
-      args.holderSecret
-    );
-    logger.info(`Holder Address: ${holderWallet.address}
-`);
-    logger.info("[2/4] Creating trustline...");
-    const trustResult = await createTrustline(
+    const holderWallet = holderSecret
+      ? xrpl.Wallet.fromSeed(holderSecret)
+      : null;
+    const holderClassic = holderWallet ? holderWallet.address : holderAddress;
+
+    if (!holderClassic) {
+      throw new Error("Provide either holderSecret OR holderAddress");
+    }*/
+
+    //logger.info(`Holder Address: ${holderWallet}`);
+    //logger.info(`Holder Classic: ${holderClassic}`);
+    const issuerWallet = xrpl.Wallet.fromSeed(args.issuerSecret);
+    const holderWallet = args.holderSecret
+      ? xrpl.Wallet.fromSeed(args.holderSecret)
+      : null;
+    const holderClassic = holderWallet
+      ? holderWallet.address
+      : args.holderAddress;
+
+    if (!holderClassic)
+      throw new Error("Provide either holderSecret or holderAddress");
+
+    logger.info(`Issuer Address: ${issuerWallet.address}`);
+    logger.info(`Holder Classic: ${holderClassic}`);
+
+if (holderWallet) logger.info("[2/4] Creating trustline...");
+else logger.info("[2/4] Verifying trustline exists...");
+    await createTrustline({
       client,
-      holderWallet,
-      issuerWallet.address,
-      args.currencyCode,
-      args.limit,
-      args.verbose
-    );
+      holderWallet, // can be null
+      holderAddress: holderClassic,
+      issuerAddress: issuerWallet.address,
+      currencyCode: args.currencyCode,
+      limit: args.limit, // ignored in issuer-only mode
+    });
+
     logger.success(`Trustline created! Hash: ${trustResult.hash}`);
     logger.info(`Explorer: https://testnet.xrpl.org/transactions/${trustResult.hash}
 `);
@@ -45202,15 +45268,16 @@ async function main() {
     logger.success(`Tokens issued! Hash: ${issueResult.hash}`);
     logger.info(`Explorer: https://testnet.xrpl.org/transactions/${issueResult.hash}
 `);
-    if (args.freeze) {
-      logger.info("[4/4] Applying trustline freeze...");
-      const freezeResult = await freezeTrustline(
-        client,
-        issuerWallet,
-        holderWallet.address,
-        args.currencyCode,
-        args.verbose
-      );
+      if (args.freeze === true || args.freeze === "true") {
+         logger.info("[4/4] Applying trustline freeze...");
+        await freezeTrustline({
+          client,
+          issuerWallet,
+          holderAddress: holderClassic, // <-- important
+          currencyCode: args.currencyCode,
+          freeze: true,
+        });
+      }
       logger.success(`Trustline frozen! Hash: ${freezeResult.hash}`);
       logger.info(`Explorer: https://testnet.xrpl.org/transactions/${freezeResult.hash}
 `);

@@ -62,10 +62,34 @@
             <input type="password" id="issuerSecret" name="issuerSecret" placeholder="sEd…" required />
             <button type="button" class="reveal" data-toggle="issuerSecret">Show</button>
           </div>
-          <div class="col-6 secret-wrap">
-            <label for="holderSecret">Investor Secret</label>
-            <input type="password" id="holderSecret" name="holderSecret" placeholder="sEd…" required />
+
+          <div class="col-6">
+            <label for="mode">Mode</label>
+            <select id="mode" name="mode">
+              <option value="both">Both seeds (full flow)</option>
+              <option value="issuer-only">Issuer seed + investor address (issue & freeze)</option>
+            </select>
+          </div>
+
+          <div class="col-6 secret-wrap" id="holderSecretWrap">
+            <label for="holderSecret">Holder Secret</label>
+            <input type="password" id="holderSecret" name="holderSecret" placeholder="sEd…" />
             <button type="button" class="reveal" data-toggle="holderSecret">Show</button>
+          </div>
+
+          <div class="col-6" id="holderAddressWrap" style="display:none">
+            <label for="holderAddress">Investor Address (r…)</label>
+            <input
+              type="text"
+              id="holderAddress"
+              name="holderAddress"
+              placeholder="r..."
+              pattern="r[a-zA-Z0-9]{25,34}" />
+            <div class="hint">Use either Investor Secret (classic flow) or Investor Address (issue-only with existing trustline).</div>
+          </div>
+
+          <div class="col-12 hint">
+            For production, avoid seeds in browsers. Prefer HSM, hardware wallet, or mobile signing.
           </div>
         </div>
       </fieldset>
@@ -81,9 +105,10 @@
             <label for="amount">Amount</label>
             <input type="number" id="amount" name="amount" placeholder="10000000" required />
           </div>
-          <div class="col-3">
+          <div class="col-3" id="limitWrap">
             <label for="limit">Trust Limit</label>
-            <input type="number" id="limit" name="limit" placeholder="100000000" required />
+            <input type="number" id="limit" name="limit" placeholder="100000000" />
+            <div class="hint">Required only when creating the holder trustline (classic mode).</div>
           </div>
           <div class="col-6">
             <label for="freeze">Freeze after payment?</label>
@@ -134,6 +159,11 @@
     const submitBtn = document.getElementById('submitBtn');
     const resetBtn = document.getElementById('resetBtn');
 
+    const mode = document.getElementById('mode');
+    const holderSecretWrap = document.getElementById('holderSecretWrap');
+    const holderAddressWrap = document.getElementById('holderAddressWrap');
+    const limitWrap = document.getElementById('limitWrap');
+
     // Show/hide secrets
     document.querySelectorAll('.reveal').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -145,8 +175,27 @@
       });
     });
 
+    // Mode toggle
+    function applyMode() {
+      const issuerOnly = mode.value === 'issuer-only';
+      holderSecretWrap.style.display = issuerOnly ? 'none' : 'block';
+      holderAddressWrap.style.display = issuerOnly ? 'block' : 'none';
+      // Trust Limit needed only in classic mode (when creating trustline)
+      limitWrap.style.display = issuerOnly ? 'none' : 'block';
+
+      // Clear the unused field to avoid accidental submission
+      if (issuerOnly) {
+        document.getElementById('holderSecret').value = '';
+      } else {
+        document.getElementById('holderAddress').value = '';
+      }
+    }
+    mode.addEventListener('change', applyMode);
+    applyMode();
+
     resetBtn?.addEventListener('click', () => {
       form.reset();
+      applyMode();
       output.textContent = '(waiting)';
       banner.className = 'banner';
       banner.textContent = '';
@@ -159,9 +208,14 @@
       output.textContent = 'Submitting…';
       submitBtn.disabled = true;
 
+      const issuerOnly = mode.value === 'issuer-only';
+      const holderSecret = issuerOnly ? '' : (form.holderSecret?.value || '');
+      const holderAddress = issuerOnly ? (form.holderAddress?.value || '') : '';
+
       const data = {
         issuerSecret: form.issuerSecret.value,
-        holderSecret: form.holderSecret.value,
+        holderSecret: holderSecret || undefined,
+        investorAddress: holderAddress || undefined, // backend expects investorAddress OR holderSecret
         currencyCode: form.currencyCode.value,
         amount: form.amount.value,
         limit: form.limit.value,
@@ -170,8 +224,36 @@
         verbose: form.verbose.value === 'true'
       };
 
+      // client-side checks: exactly one of holderSecret or investorAddress
+      const hasHolder = !!data.holderSecret;
+      const hasAddr   = !!data.investorAddress;
+
+      if (!hasHolder && !hasAddr) {
+        banner.className = 'banner err';
+        banner.textContent = 'Provide Investor Secret OR Investor Address.';
+        output.textContent = '(missing investor credential)';
+        submitBtn.disabled = false;
+        return;
+      }
+      if (hasHolder && hasAddr) {
+        banner.className = 'banner err';
+        banner.textContent = 'Provide only one: Investor Secret OR Investor Address.';
+        output.textContent = '(mutually exclusive)';
+        submitBtn.disabled = false;
+        return;
+      }
+
+      // quick pattern check for address mode
+      if (hasAddr && !/^r[a-zA-Z0-9]{25,34}$/.test(data.investorAddress)) {
+        banner.className = 'banner err';
+        banner.textContent = 'Investor address format looks invalid.';
+        output.textContent = '(address pattern mismatch)';
+        submitBtn.disabled = false;
+        return;
+      }
+
       try {
-        const res = await fetch('/api/xrpl/execute', { // extensionless route (preferred)
+        const res = await fetch('/api/xrpl/execute', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)

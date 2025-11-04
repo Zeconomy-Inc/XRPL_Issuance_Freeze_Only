@@ -8,13 +8,14 @@ module.exports = async (req, res) => {
   const {
     issuerSecret,
     holderSecret,
+    investorAddress, // NEW
     currencyCode,
     amount,
     limit,
     freeze,
     network,
     verbose,
-  } = req.body || {};
+  } = req.body;
   if (
     !issuerSecret ||
     !holderSecret ||
@@ -29,23 +30,28 @@ module.exports = async (req, res) => {
   const scriptPath = path.join(__dirname, "runner.cjs");
   console.log("scriptPath:", scriptPath);
 
+  // build argv for the runner
   const args = [
-    scriptPath,
     "--issuer-secret",
     issuerSecret,
-    "--holder-secret",
-    holderSecret,
     "--currency-code",
-    String(currencyCode),
+    currencyCode,
     "--amount",
     String(amount),
-    "--limit",
-    String(limit),
     "--freeze",
-    String(Boolean(freeze)),
+    String(freeze),
     "--network",
-    String(network),
+    network,
+    "--verbose",
+    String(verbose),
   ];
+  // classic mode
+  if (holderSecret) {
+    args.push("--holder-secret", holderSecret);
+  } else if (investorAddress) {
+    // issue-only mode (trustline must already exist)
+    args.push("--holder-address", investorAddress);
+  }
   if (verbose) args.push("--verbose");
 
   const child = spawn("node", args, { env: process.env });
