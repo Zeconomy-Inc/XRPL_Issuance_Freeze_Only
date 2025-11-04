@@ -215,7 +215,8 @@
       const data = {
         issuerSecret: form.issuerSecret.value,
         holderSecret: holderSecret || undefined,
-        investorAddress: holderAddress || undefined, // backend expects investorAddress OR holderSecret
+        //investorAddress: holderAddress || undefined, // backend expects investorAddress OR holderSecret
+        holderAddress: holderAddress || undefined, 
         currencyCode: form.currencyCode.value,
         amount: form.amount.value,
         limit: form.limit.value,
@@ -223,11 +224,11 @@
         network: form.network.value,
         verbose: form.verbose.value === 'true'
       };
-
+      // If limit exists but is an empty string, remove it:
+if ('limit' in data && (data.limit === '' || data.limit == null)) delete data.limit;
       // client-side checks: exactly one of holderSecret or investorAddress
       const hasHolder = !!data.holderSecret;
-      const hasAddr   = !!data.investorAddress;
-
+      const hasAddr   = !!data.holderAddress; 
       if (!hasHolder && !hasAddr) {
         banner.className = 'banner err';
         banner.textContent = 'Provide Investor Secret OR Investor Address.';

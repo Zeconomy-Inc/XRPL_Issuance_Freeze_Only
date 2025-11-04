@@ -8,42 +8,58 @@ module.exports = async (req, res) => {
   const {
     issuerSecret,
     holderSecret,
-    investorAddress, // NEW
+    holderAddress, // NEW
+    investorAddress, // allow old field
     currencyCode,
     amount,
-    limit,
     freeze,
     network,
+    limit,
     verbose,
   } = req.body;
-  if (
-    !issuerSecret ||
-    !holderSecret ||
-    !currencyCode ||
-    !amount ||
-    !limit ||
-    !network
-  )
+  // basic required fields
+  // alias support
+  holderAddress = holderAddress || investorAddress || null;
+  if (!issuerSecret || !currencyCode || !amount || !network) {
     return res.status(400).json({ error: "Missing required fields" });
-
+  }
+  // exactly one of secret or address
+  if ((hasHolder && hasAddr) || (!hasHolder && !hasAddr)) {
+    return res
+      .status(400)
+      .json({ error: "Provide holderSecret OR holderAddress (not both)" });
+  }
+  // limit is only required when we are creating the trustline
+  if (
+    !issuerOnly &&
+    (limit === undefined || limit === null || `${limit}`.trim() === "")
+  ) {
+    return res
+      .status(400)
+      .json({ error: "Missing limit (required when creating trustline)" });
+  }
   // point to the script sitting *next to* this file
   const scriptPath = path.join(__dirname, "runner.cjs");
   console.log("scriptPath:", scriptPath);
 
   // build argv for the runner
   const args = [
+    "node",
+    "runner.cjs",
     "--issuer-secret",
     issuerSecret,
+    hasHolder ? "--holder-secret" : "--holder-address",
+    hasHolder ? holderSecret : holderAddress,
     "--currency-code",
     currencyCode,
     "--amount",
     String(amount),
+    ...(issuerOnly ? [] : ["--limit", String(limit)]),
     "--freeze",
-    String(freeze),
+    String(!!freeze),
     "--network",
     network,
-    "--verbose",
-    String(verbose),
+    ...(verbose ? ["--verbose"] : []),
   ];
   // classic mode
   if (holderSecret) {
