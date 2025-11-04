@@ -1,7 +1,6 @@
 // api/xrpl/execute/index.js
 const path = require("path");
 
-// Load runner.cjs from THIS directory (same folder)
 const runMod = require(path.join(__dirname, "runner.cjs"));
 const run =
   typeof runMod === "function"
@@ -16,7 +15,6 @@ module.exports = async (req, res) => {
   try {
     if (!run) throw new Error("runner.cjs does not export a callable function");
 
-    // Robust body parsing
     let body = req.body;
     if (typeof body === "string") {
       try {
@@ -31,17 +29,10 @@ module.exports = async (req, res) => {
       } catch {}
     }
 
-    // Support common signatures
-    if (run.length >= 2) {
-      // (req, res)
-      return await run(req, res);
-    }
+    if (run.length >= 2) return await run(req, res); // (req,res) style
 
     const result =
-      run.length === 1
-        ? await run(body ?? req) // (body) or (req)
-        : await run({ req, body }); // (opts)
-
+      run.length === 1 ? await run(body ?? req) : await run({ req, body });
     res.status(200).json(result ?? { ok: true });
   } catch (err) {
     console.error("EXECUTE_ERROR", err);
