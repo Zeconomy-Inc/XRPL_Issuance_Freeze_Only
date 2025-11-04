@@ -1,2 +1,9 @@
-.vercel
-.vercel
+# deps & caches
+node_modules/
+.vercel/output/
+.DS_Store
+
+# locks (we’ll keep the repo manager-agnostic)
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
