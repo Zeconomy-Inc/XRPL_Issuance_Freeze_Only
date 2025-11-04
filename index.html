@@ -77,25 +77,21 @@
             <button type="button" class="reveal" data-toggle="holderSecret">Show</button>
           </div>
 
-          <div class="col-6" id="holderAddressWrap" style="display:none">
-            <label for="holderAddress">Investor Address (r…)</label>
-           <input
-  type="text"
-  id="holderAddress"
-  name="holderAddress"
-  placeholder="r..."
-  pattern="^r[1-9A-HJ-NP-Za-km-z]{25,34}$"
-  autocomplete="off"
-  autocapitalize="off"
-  autocorrect="off"
-  spellcheck="false"
-/>
-            <div class="hint">Use either Investor Secret (classic flow) or Investor Address (issue-only with existing trustline).</div>
-          </div>
-
-          <div class="col-12 hint">
-            For production, avoid seeds in browsers. Prefer HSM, hardware wallet, or mobile signing.
-          </div>
+         <div class="col-6" id="holderAddressWrap">
+    <label for="holderAddress">Investor Address (r…)</label>
+    <input
+      type="text"
+      id="holderAddress"
+      name="holderAddress"
+      placeholder="r..."
+      pattern="^r[1-9A-HJ-NP-Za-km-z]{25,34}$"
+      autocomplete="off"
+      autocapitalize="off"
+      autocorrect="off"
+      spellcheck="false"
+    />
+    <div class="hint">Use either Investor Secret (classic flow) or Investor Address (issue-only with existing trustline).</div>
+  </div>
         </div>
       </fieldset>
 

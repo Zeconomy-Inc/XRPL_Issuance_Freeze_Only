@@ -1,7 +1,8 @@
 {
   "name": "xrpl_issuance_freeze_only",
   "private": true,
-  "scripts": {
-    "start": "serve -p 3000 ."
+  "type": "commonjs",
+  "dependencies": {
+    "xrpl": "^2.14.0"
   }
 }
