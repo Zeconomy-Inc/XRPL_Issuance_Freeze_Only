@@ -244,14 +244,23 @@ if ('limit' in data && (data.limit === '' || data.limit == null)) delete data.li
         return;
       }
 
-      // quick pattern check for address mode
-      if (hasAddr && !/^r[1-9A-HJ-NP-Za-km-z]{25,34}$/.test(data.investorAddress)) {
+   const CLASSIC_ADDR = /^r[1-9A-HJ-NP-Za-km-z]{25,34}$/;
+
+function cleanAddr(a) {
+  return (a ?? '').trim().replace(/\u200B/g, ''); // remove invisible characters
+}
+
+const addr = cleanAddr(data.investorAddress);
+
+if (hasAddr && !CLASSIC_ADDR.test(addr)) {
+  console.log('Investor Address Debug:', addr, addr.length, [...addr].map(c => c.charCodeAt(0)));
   banner.className = 'banner err';
   banner.textContent = 'Investor address format looks invalid.';
   output.textContent = '(address pattern mismatch)';
   submitBtn.disabled = false;
   return;
 }
+
       try {
         const res = await fetch('/api/xrpl/execute', {
           method: 'POST',
