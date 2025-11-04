@@ -29,7 +29,7 @@ module.exports = async (req, res) => {
       } catch {}
     }
 
-    if (run.length >= 2) return await run(req, res); // (req,res) style
+    if (run.length >= 2) return await run(req, res);
 
     const result =
       run.length === 1 ? await run(body ?? req) : await run({ req, body });

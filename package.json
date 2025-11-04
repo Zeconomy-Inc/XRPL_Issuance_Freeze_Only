@@ -1,7 +1,7 @@
 {
   "name": "xrpl_issuance_freeze_only",
   "private": true,
-  "engines": { "node": "18.x" },
+  "engines": { "node": "22.x" },
   "dependencies": {
     "xrpl": "^2.14.0"
   }
