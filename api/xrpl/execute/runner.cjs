@@ -1,4 +1,12 @@
 #!/usr/bin/env node
+// ---- serverless-safe exit shim ----
+/* Prevent hard exits when required from serverless */
+if (typeof process !== 'undefined' && !global.__ALLOW_EXIT__) {
+  const _exit = process.exit;
+  process.exit = (code) => { throw new Error(`EXIT_${code}`); };
+}
+// -----------------------------------
+
 var __create = Object.create;
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -45295,9 +45303,52 @@ Error: ${error.message}`);
       logger.error(`Details: ${JSON.stringify(error.data, null, 2)}`);
     }
     process.exit(1);
-  }
+   }
 }
-main();
+
+// Run as CLI only when invoked directly
+if (require.main === module) {
+  // allow exits for CLI
+  global.__ALLOW_EXIT__ = true;
+  main();
+}
+
+// Export a function for serverless
+module.exports = async function run(input) {
+  // Build argv from input and call main() without exiting the process
+  const args = input || {};
+  const prevArgv = process.argv.slice();
+  const argv = ['node', 'runner.cjs'];
+
+  if (args.issuerSecret)    argv.push('--issuer-secret', args.issuerSecret);
+  if (args.holderSecret)    argv.push('--holder-secret', args.holderSecret);
+  if (args.investorAddress) argv.push('--holder-address', args.investorAddress);
+  else if (args.holderAddress) argv.push('--holder-address', args.holderAddress);
+  if (args.amount != null)  argv.push('--amount', String(args.amount));
+  if (args.currencyCode)    argv.push('--currency-code', String(args.currencyCode));
+  if (args.limit)           argv.push('--limit', String(args.limit));
+  if (args.network)         argv.push('--network', String(args.network));
+  if (args.freeze === true) argv.push('--freeze');
+  if (args.verbose)         argv.push('--verbose');
+
+  try {
+    process.argv = argv;
+    await main();                  // use the existing bundled logic
+    return { ok: true };
+  } catch (e) {
+    // map our exit shim to a clean error
+    const msg = String(e && e.message || e);
+    if (msg.startsWith('EXIT_')) {
+      const code = Number(msg.slice(5)) || 1;
+      if (code === 0) return { ok: true };
+      throw new Error('runner exited with non-zero status');
+    }
+    throw e;
+  } finally {
+    process.argv = prevArgv;
+  }
+};
+
 /*! Bundled license information:
 
 @noble/hashes/utils.js:
