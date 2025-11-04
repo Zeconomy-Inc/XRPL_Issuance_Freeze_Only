@@ -1,6 +1,0 @@
-{
-  "functions": {
-    "api/**/*.{js,cjs}": { "runtime": "nodejs22.x" }
-  },
-  "framework": null
-}
