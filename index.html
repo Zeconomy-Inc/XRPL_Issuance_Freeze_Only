@@ -245,14 +245,13 @@ if ('limit' in data && (data.limit === '' || data.limit == null)) delete data.li
       }
 
       // quick pattern check for address mode
-      if (hasAddr && !/^r[a-zA-Z0-9]{25,34}$/.test(data.investorAddress)) {
-        banner.className = 'banner err';
-        banner.textContent = 'Investor address format looks invalid.';
-        output.textContent = '(address pattern mismatch)';
-        submitBtn.disabled = false;
-        return;
-      }
-
+      if (hasAddr && !/^r[1-9A-HJ-NP-Za-km-z]{25,34}$/.test(data.investorAddress)) {
+  banner.className = 'banner err';
+  banner.textContent = 'Investor address format looks invalid.';
+  output.textContent = '(address pattern mismatch)';
+  submitBtn.disabled = false;
+  return;
+}
       try {
         const res = await fetch('/api/xrpl/execute', {
           method: 'POST',
