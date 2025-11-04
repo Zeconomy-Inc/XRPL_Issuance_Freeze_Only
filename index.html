@@ -79,12 +79,17 @@
 
           <div class="col-6" id="holderAddressWrap" style="display:none">
             <label for="holderAddress">Investor Address (r…)</label>
-            <input
-              type="text"
-              id="holderAddress"
-              name="holderAddress"
-              placeholder="r..."
-              pattern="r[a-zA-Z0-9]{25,34}" />
+           <input
+  type="text"
+  id="holderAddress"
+  name="holderAddress"
+  placeholder="r..."
+  pattern="^r[1-9A-HJ-NP-Za-km-z]{25,34}$"
+  autocomplete="off"
+  autocapitalize="off"
+  autocorrect="off"
+  spellcheck="false"
+/>
             <div class="hint">Use either Investor Secret (classic flow) or Investor Address (issue-only with existing trustline).</div>
           </div>
 
@@ -247,12 +252,17 @@ if ('limit' in data && (data.limit === '' || data.limit == null)) delete data.li
    const CLASSIC_ADDR = /^r[1-9A-HJ-NP-Za-km-z]{25,34}$/;
 
 function cleanAddr(a) {
-  return (a ?? '').trim().replace(/\u200B/g, ''); // remove invisible characters
+  return (a ?? '').trim().replace(/\u200B/g, '');
 }
 
-const addr = cleanAddr(data.investorAddress);
+const raw = document.querySelector('#holderAddress')?.value ?? '';
 
-if (hasAddr && !CLASSIC_ADDR.test(addr)) {
+const addr = cleanAddr(raw);
+console.log('RAW investorAddress from data:', data.investorAddress);
+console.log('CLEANED addr/len/codes:', addr, addr.length, [...addr].map(c => c.charCodeAt(0)));
+const mustValidate = Boolean(hasAddr && addr);
+
+if (mustValidate && !CLASSIC_ADDR.test(addr)) {
   console.log('Investor Address Debug:', addr, addr.length, [...addr].map(c => c.charCodeAt(0)));
   banner.className = 'banner err';
   banner.textContent = 'Investor address format looks invalid.';
@@ -260,7 +270,7 @@ if (hasAddr && !CLASSIC_ADDR.test(addr)) {
   submitBtn.disabled = false;
   return;
 }
-
+data.investorAddress = addr;
       try {
         const res = await fetch('/api/xrpl/execute', {
           method: 'POST',
