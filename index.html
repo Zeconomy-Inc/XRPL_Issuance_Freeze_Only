@@ -261,10 +261,6 @@ if (!issuerOnly && !hasHolder) {
   return;
 }
 
-function cleanAddr(a) {
-  return (a ?? '').trim().replace(/\u200B/g, '');
-}
-
 const raw = document.querySelector('#holderAddress')?.value ?? '';
       try {
         const res = await fetch('/api/xrpl/execute', {
