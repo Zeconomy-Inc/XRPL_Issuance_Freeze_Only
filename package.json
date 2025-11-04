@@ -1,7 +1,6 @@
 {
   "name": "xrpl_issuance_freeze_only",
   "private": true,
-  "type": "commonjs",
   "dependencies": {
     "xrpl": "^2.14.0"
   }

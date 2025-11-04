@@ -1,9 +1,7 @@
 // api/xrpl/execute/index.js
-export const config = { runtime: "nodejs22.x" };
-
 const path = require("path");
 
-// Load runner.cjs from THIS directory (not project root)
+// Load runner.cjs from THIS directory (same folder)
 const runMod = require(path.join(__dirname, "runner.cjs"));
 const run =
   typeof runMod === "function"
@@ -16,9 +14,9 @@ const run =
 
 module.exports = async (req, res) => {
   try {
-    if (!run) throw new Error("runner.cjs does not export a function");
+    if (!run) throw new Error("runner.cjs does not export a callable function");
 
-    // Parse body robustly
+    // Robust body parsing
     let body = req.body;
     if (typeof body === "string") {
       try {
@@ -33,19 +31,16 @@ module.exports = async (req, res) => {
       } catch {}
     }
 
-    // Adapt to common signatures
-    let result;
+    // Support common signatures
     if (run.length >= 2) {
-      // (req, res) style — runner handles the response
+      // (req, res)
       return await run(req, res);
     }
-    if (run.length === 1) {
-      // (body) or (req) style — pass body if present, else req
-      result = await run(body ?? req);
-    } else {
-      // no-args or options object
-      result = await run({ req, body });
-    }
+
+    const result =
+      run.length === 1
+        ? await run(body ?? req) // (body) or (req)
+        : await run({ req, body }); // (opts)
 
     res.status(200).json(result ?? { ok: true });
   } catch (err) {
