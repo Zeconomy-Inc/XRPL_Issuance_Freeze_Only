@@ -1,95 +1,171 @@
 // api/xrpl/execute/index.js
-// Run runner.cjs as a CLI via child_process and return its result.
+// Direct XRPL implementation: check trustline → issue → optional freeze.
+// CommonJS (module.exports) so it runs fine on Vercel Modern (Node 22).
 
-const path = require("path");
-const { execFile } = require("child_process");
+const xrpl = require("xrpl");
 
-function buildArgs(body) {
-  const args = [path.join(__dirname, "runner.cjs")];
+const CLASSIC_ADDR = /^r[1-9A-HJ-NP-Za-km-z]{25,34}$/;
+const clean = (s) => (s ?? "").trim().replace(/\u200B/g, "");
 
-  const add = (flag, val, toString = true) => {
-    if (val === undefined || val === null || val === "") return;
-    args.push(flag);
-    args.push(toString ? String(val) : val);
-  };
-
-  // Map incoming JSON → CLI flags
-  add("--issuer-secret", body.issuerSecret);
-  add("--holder-secret", body.holderSecret);
-  // investorAddress maps to holder-address in your CLI
-  add("--holder-address", body.investorAddress || body.holderAddress);
-  add("--amount", body.amount);
-  add("--currency-code", body.currencyCode);
-  add("--limit", body.limit);
-  add("--network", body.network);
-  if (body.freeze === true) args.push("--freeze");
-  if (body.verbose === true) args.push("--verbose");
-
-  return args;
+// Convert non-3-char ASCII codes (e.g., "GDCP20251110") to 160-bit hex
+function toXrplCurrency(code) {
+  const s = String(code || "");
+  if (/^[A-Z0-9]{3}$/.test(s)) return s;
+  const hex = Buffer.from(s, "ascii").toString("hex").toUpperCase();
+  return hex.padEnd(40, "0").slice(0, 40);
 }
 
-function tryParseJSON(s) {
-  try {
-    return JSON.parse(s);
-  } catch {
-    return null;
+async function parseBody(req) {
+  let body = req.body;
+  if (typeof body === "string") {
+    try {
+      body = JSON.parse(body);
+    } catch {
+      body = null;
+    }
   }
+  if (!body || typeof body !== "object") {
+    const chunks = [];
+    for await (const c of req) chunks.push(c);
+    try {
+      body = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+    } catch {
+      body = {};
+    }
+  }
+  return body;
 }
 
 module.exports = async (req, res) => {
   try {
-    if (req.method !== "POST")
+    if (req.method !== "POST") {
       return res.status(405).json({ error: "METHOD_NOT_ALLOWED" });
-
-    // robust body parsing
-    let body = req.body;
-    if (typeof body === "string") {
-      try {
-        body = JSON.parse(body);
-      } catch {
-        body = {};
-      }
     }
-    if (!body || typeof body !== "object") body = {};
 
-    const nodeBin = process.execPath; // Node runtime on Vercel
-    const argv = buildArgs(body);
+    const body = await parseBody(req);
 
-    // Spawn runner.cjs
-    execFile(
-      nodeBin,
-      argv,
-      { cwd: __dirname, env: { ...process.env } },
-      (error, stdout, stderr) => {
-        // If runner printed JSON, return it; else include raw text
-        const jsonOut = tryParseJSON(stdout) || tryParseJSON(stderr);
+    // Inputs
+    let {
+      issuerSecret,
+      investorAddress, // classic r...
+      amount,
+      currencyCode,
+      freeze,
+      network,
+      limit,
+    } = body;
 
-        if (error) {
-          // Non-zero exit — bubble a clear response
-          return res.status(400).json({
-            error: "RUNNER_CLI_ERROR",
-            code: typeof error.code === "number" ? error.code : undefined,
-            signal: error.signal || undefined,
-            stdout:
-              jsonOut || (stdout ? String(stdout).slice(0, 4000) : undefined),
-            stderr: stderr ? String(stderr).slice(0, 4000) : undefined,
-          });
-        }
+    // Sanitize
+    issuerSecret = clean(issuerSecret);
+    investorAddress = clean(investorAddress);
+    amount = clean(amount);
+    currencyCode = clean(currencyCode);
+    network = (clean(network) || "testnet").toLowerCase();
+    limit = clean(limit);
 
-        // Success path
-        if (jsonOut) return res.status(200).json(jsonOut);
-        return res.status(200).json({
-          ok: true,
-          stdout: stdout ? String(stdout).slice(0, 4000) : "",
-        });
-      }
+    // Validate
+    if (!issuerSecret) {
+      return res.status(400).json({ error: "Missing issuerSecret" });
+    }
+    if (!investorAddress || !CLASSIC_ADDR.test(investorAddress)) {
+      return res.status(400).json({ error: "Invalid investorAddress" });
+    }
+    const amt = Number(amount);
+    if (!Number.isFinite(amt) || amt <= 0) {
+      return res.status(400).json({ error: "Invalid amount" });
+    }
+
+    const currency = toXrplCurrency(currencyCode);
+
+    // XRPL endpoints: prefer env, fall back to public
+    const server =
+      network === "mainnet"
+        ? process.env.XRPL_MAINNET_URL || "wss://xrplcluster.com"
+        : process.env.XRPL_TESTNET_URL || "wss://s.altnet.rippletest.net:51233";
+
+    const client = new xrpl.Client(server);
+    await client.connect();
+
+    const issuer = xrpl.Wallet.fromSeed(issuerSecret);
+    const issuerAddr = issuer.address;
+
+    // Optional: check trustline (issuer-only flow expects it)
+    const lines = await client.request({
+      command: "account_lines",
+      account: investorAddress,
+      peer: issuerAddr,
+    });
+
+    const hasTL = (lines.result.lines || []).some(
+      (l) =>
+        l.account === issuerAddr &&
+        (String(l.currency).toUpperCase() === currency.toUpperCase() ||
+          String(l.currency).toUpperCase() === currencyCode.toUpperCase())
     );
+
+    if (!hasTL) {
+      await client.disconnect();
+      return res
+        .status(400)
+        .json({ error: "Trustline missing for investor/issuer/token" });
+    }
+
+    // 1) Issue payment (issuer → investor)
+    const payment = {
+      TransactionType: "Payment",
+      Account: issuerAddr,
+      Destination: investorAddress,
+      Amount: {
+        currency,
+        issuer: issuerAddr,
+        value: String(amt),
+      },
+    };
+
+    const preparedPay = await client.autofill(payment);
+    const signedPay = issuer.sign(preparedPay);
+    const payResult = await client.submitAndWait(signedPay.tx_blob);
+
+    // 2) Optional: freeze (issuer side freeze on the trustline)
+    let freezeResult = null;
+    if (freeze === true) {
+      // Freeze is set via TrustSet with tfSetFreeze (issuer side / HighFreeze)
+      const trustSet = {
+        TransactionType: "TrustSet",
+        Account: issuerAddr,
+        Flags: xrpl.TrustSetFlags.tfSetFreeze,
+        LimitAmount: {
+          currency,
+          issuer: investorAddress, // direction
+          value: "0",
+        },
+      };
+      const preparedT = await client.autofill(trustSet);
+      const signedT = issuer.sign(preparedT);
+      freezeResult = await client.submitAndWait(signedT.tx_blob);
+    }
+
+    await client.disconnect();
+
+    return res.status(200).json({
+      ok: true,
+      payment: {
+        hash: payResult.result?.hash,
+        engine_result: payResult.result?.engine_result,
+      },
+      freeze: freezeResult
+        ? {
+            hash: freezeResult.result?.hash,
+            engine_result: freezeResult.result?.engine_result,
+          }
+        : null,
+    });
   } catch (e) {
-    console.error("EXECUTE_WRAPPER_ERROR", e);
-    res
+    console.error("ISSUE_FREEZE_ERROR", e);
+    return res
       .status(500)
       .json({
-        error: "EXECUTE_WRAPPER_ERROR",
+        error: "ISSUE_FREEZE_ERROR",
         message: String((e && e.message) || e),
       });
   }
