@@ -53,7 +53,7 @@
     <h1>XRPL — TrustSet + Payment</h1>
     <p class="sub">Fill the fields, submit, and the server will run your script. Two-column layout on desktop; stacks on mobile.</p>
 
-    <form id="txForm">
+    <form id="txForm" novalidate>
       <fieldset>
         <legend>Secrets</legend>
         <div class="row">
@@ -214,59 +214,58 @@
       const holderAddress = issuerOnly ? (form.holderAddress?.value || '') : '';
 
       const data = {
-        issuerSecret: form.issuerSecret.value,
-        holderSecret: holderSecret || undefined,
-        //investorAddress: holderAddress || undefined, // backend expects investorAddress OR holderSecret
-        holderAddress: holderAddress || undefined, 
-        currencyCode: form.currencyCode.value,
-        amount: form.amount.value,
-        limit: form.limit.value,
-        freeze: form.freeze.value === 'true',
-        network: form.network.value,
-        verbose: form.verbose.value === 'true'
-      };
+  issuerSecret: form.issuerSecret.value,
+  holderSecret: holderSecret || undefined,
+  currencyCode: form.currencyCode.value,
+  amount: form.amount.value,
+  limit: form.limit.value,
+  freeze: form.freeze.value === 'true',
+  network: form.network.value,
+  verbose: form.verbose.value === 'true'
+};
       // If limit exists but is an empty string, remove it:
 if ('limit' in data && (data.limit === '' || data.limit == null)) delete data.limit;
       // client-side checks: exactly one of holderSecret or investorAddress
-      const hasHolder = !!data.holderSecret;
-      const hasAddr   = !!data.holderAddress; 
-      if (!hasHolder && !hasAddr) {
-        banner.className = 'banner err';
-        banner.textContent = 'Provide Investor Secret OR Investor Address.';
-        output.textContent = '(missing investor credential)';
-        submitBtn.disabled = false;
-        return;
-      }
-      if (hasHolder && hasAddr) {
-        banner.className = 'banner err';
-        banner.textContent = 'Provide only one: Investor Secret OR Investor Address.';
-        output.textContent = '(mutually exclusive)';
-        submitBtn.disabled = false;
-        return;
-      }
+      // Clean + validate investor address when issuer-only mode
+      const CLASSIC_ADDR = /^r[1-9A-HJ-NP-Za-km-z]{25,34}$/;
+      const cleanAddr = (a) => (a ?? '').trim().replace(/\u200B/g, '');
+      if (issuerOnly) {
+  const raw = document.querySelector('#holderAddress')?.value ?? '';
+  const addr = cleanAddr(raw);
 
-   const CLASSIC_ADDR = /^r[1-9A-HJ-NP-Za-km-z]{25,34}$/;
+  if (!addr || !CLASSIC_ADDR.test(addr)) {
+    banner.className = 'banner err';
+    banner.textContent = 'Investor address format looks invalid.';
+    output.textContent = '(address pattern mismatch)';
+    submitBtn.disabled = false;
+    return;
+  }
+  data.investorAddress = addr; // send only investorAddress
+}
+      const hasHolder = !!data.holderSecret;
+const hasInvestorAddr = !!data.investorAddress;
+
+// In issuer-only mode, require investorAddress; in classic mode, require holderSecret.
+if (issuerOnly && !hasInvestorAddr) {
+  banner.className = 'banner err';
+  banner.textContent = 'Investor address is required in Issuer-only mode.';
+  output.textContent = '(missing investor address)';
+  submitBtn.disabled = false;
+  return;
+}
+if (!issuerOnly && !hasHolder) {
+  banner.className = 'banner err';
+  banner.textContent = 'Holder secret is required in classic mode.';
+  output.textContent = '(missing holder secret)';
+  submitBtn.disabled = false;
+  return;
+}
 
 function cleanAddr(a) {
   return (a ?? '').trim().replace(/\u200B/g, '');
 }
 
 const raw = document.querySelector('#holderAddress')?.value ?? '';
-
-const addr = cleanAddr(raw);
-console.log('RAW investorAddress from data:', data.investorAddress);
-console.log('CLEANED addr/len/codes:', addr, addr.length, [...addr].map(c => c.charCodeAt(0)));
-const mustValidate = Boolean(hasAddr && addr);
-
-if (mustValidate && !CLASSIC_ADDR.test(addr)) {
-  console.log('Investor Address Debug:', addr, addr.length, [...addr].map(c => c.charCodeAt(0)));
-  banner.className = 'banner err';
-  banner.textContent = 'Investor address format looks invalid.';
-  output.textContent = '(address pattern mismatch)';
-  submitBtn.disabled = false;
-  return;
-}
-data.investorAddress = addr;
       try {
         const res = await fetch('/api/xrpl/execute', {
           method: 'POST',

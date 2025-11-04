@@ -1,7 +1,6 @@
 {
   "framework": null,
   "functions": {
-    "api/**/*.js": { "runtime": "nodejs22.x" },
-    "api/**/*.cjs": { "runtime": "nodejs22.x" }
+    "api/**/*.{js,cjs}": { "runtime": "nodejs22.x" }
   }
 }

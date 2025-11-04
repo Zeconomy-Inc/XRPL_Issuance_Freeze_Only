@@ -1,15 +1,24 @@
-// Ensures Node 22 serverless runtime
+// api/xrpl/execute/index.js
 export const config = { runtime: "nodejs22.x" };
 
-// Delegate to your CommonJS runner
 const path = require("path");
 
-// If runner.cjs exports a function like: module.exports = async (req) => ({ ok: true })
-const run = require(path.join(process.cwd(), "runner.cjs"));
+// Load runner.cjs from THIS directory (not project root)
+const runMod = require(path.join(__dirname, "runner.cjs"));
+const run =
+  typeof runMod === "function"
+    ? runMod
+    : typeof runMod?.default === "function"
+    ? runMod.default
+    : typeof runMod?.execute === "function"
+    ? runMod.execute
+    : null;
 
 module.exports = async (req, res) => {
   try {
-    // Handle both raw body and JSON
+    if (!run) throw new Error("runner.cjs does not export a function");
+
+    // Parse body robustly
     let body = req.body;
     if (typeof body === "string") {
       try {
@@ -24,7 +33,20 @@ module.exports = async (req, res) => {
       } catch {}
     }
 
-    const result = await run({ req, body });
+    // Adapt to common signatures
+    let result;
+    if (run.length >= 2) {
+      // (req, res) style — runner handles the response
+      return await run(req, res);
+    }
+    if (run.length === 1) {
+      // (body) or (req) style — pass body if present, else req
+      result = await run(body ?? req);
+    } else {
+      // no-args or options object
+      result = await run({ req, body });
+    }
+
     res.status(200).json(result ?? { ok: true });
   } catch (err) {
     console.error("EXECUTE_ERROR", err);
