@@ -5,51 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>XRPL — TrustSet + Payment Form</title>
   <style>
-    :root {
-      --bg: #0b0f14; --card: #121821; --ink: #e9eef3; --muted: #9fb0c0; --line:#233042;
-      --accent: #2e7aef; --accent-2:#1f5dc0; --ok:#1fbf75; --err:#d9415a; --warn:#f4b740;
-    }
-    * { box-sizing: border-box; }
-    body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif; background: var(--bg); color: var(--ink); margin: 0; padding: 24px; }
-    .container { max-width: 980px; margin: auto; background: var(--card); padding: 28px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,.35); border: 1px solid var(--line); }
-    h1 { margin: 0 0 4px; font-size: 24px; }
-    p.sub { margin: 0 0 18px; color: var(--muted); }
-
-    form { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
-    fieldset { grid-column: 1 / -1; border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
-    legend { padding: 0 8px; color: #cfe1f5; font-size: 13px; }
-
-    .col-6 { grid-column: span 6; }
-    .col-4 { grid-column: span 4; }
-    .col-3 { grid-column: span 3; }
-    .col-12 { grid-column: span 12; }
-    @media (max-width: 760px) { .col-6, .col-4, .col-3 { grid-column: span 12; } }
-
-    label { display: block; margin-bottom: 6px; color: #c3d2e1; font-size: 13px; }
-    input, select, textarea { width: 100%; padding: 12px 12px; border-radius: 12px; border: 1px solid #2c3b51; background: #0f141c; color: var(--ink); outline: none; }
-    input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(46,122,239,.18); }
-
-    .row { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
-    .hint { color: var(--muted); font-size: 12px; margin-top: 6px; }
-
-    .controls { grid-column: 1 / -1; display: flex; gap: 12px; align-items: center; justify-content: flex-start; flex-wrap: wrap; margin-top: 4px; }
-    button { background: var(--accent); color: #fff; border: 0; padding: 12px 16px; border-radius: 12px; font-weight: 700; cursor: pointer; }
-    button:hover { background: var(--accent-2); }
-    button.ghost { background: transparent; border: 1px solid var(--line); color: var(--ink); }
-
-    .banner { grid-column: 1 / -1; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: #0e1620; display: none; }
-    .banner.ok { display: block; border-color: #1a6f48; }
-    .banner.err { display: block; border-color: #7a2431; }
-
-    pre { background: #0b0f14; border: 1px solid var(--line); padding: 12px; border-radius: 12px; overflow: auto; margin-top: 16px; }
-
-    .secret-wrap { position: relative; }
-    .reveal { position: absolute; right: 8px; top: 34px; font-size: 12px; background: #17202b; border: 1px solid var(--line); padding: 6px 8px; border-radius: 10px; cursor: pointer; }
-
-    .inline-note { margin-top: 6px; font-size: 12px; color: var(--muted); }
-    .inline-note.working { color: #9fc7ff; }
-    .inline-note.err { color: var(--err); }
-    .inline-note.ok { color: var(--ok); }
+    :root { --bg:#0b0f14; --card:#121821; --ink:#e9eef3; --muted:#9fb0c0; --line:#233042; --accent:#2e7aef; --accent-2:#1f5dc0; --ok:#1fbf75; --err:#d9415a; }
+    *{box-sizing:border-box}
+    body{font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;background:var(--bg);color:var(--ink);margin:0;padding:24px}
+    .container{max-width:980px;margin:auto;background:var(--card);padding:28px;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.35);border:1px solid var(--line)}
+    h1{margin:0 0 4px;font-size:24px}
+    p.sub{margin:0 0 18px;color:var(--muted)}
+    form{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+    fieldset{grid-column:1/-1;border:1px solid var(--line);border-radius:14px;padding:14px}
+    legend{padding:0 8px;color:#cfe1f5;font-size:13px}
+    .col-6{grid-column:span 6}.col-4{grid-column:span 4}.col-3{grid-column:span 3}.col-12{grid-column:span 12}
+    @media (max-width:760px){.col-6,.col-4,.col-3{grid-column:span 12}}
+    label{display:block;margin-bottom:6px;color:#c3d2e1;font-size:13px}
+    input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px solid #2c3b51;background:#0f141c;color:var(--ink);outline:none}
+    input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(46,122,239,.18)}
+    .row{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+    .hint{color:var(--muted);font-size:12px;margin-top:6px}
+    .controls{grid-column:1/-1;display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:4px}
+    button{background:var(--accent);color:#fff;border:0;padding:12px 16px;border-radius:12px;font-weight:700;cursor:pointer}
+    button:hover{background:var(--accent-2)}
+    button.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+    .banner{grid-column:1/-1;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:#0e1620;display:none}
+    .banner.ok{display:block;border-color:#1a6f48}
+    .banner.err{display:block;border-color:#7a2431}
+    pre{background:#0b0f14;border:1px solid var(--line);padding:12px;border-radius:12px;overflow:auto;margin-top:16px}
+    .secret-wrap{position:relative}
+    .reveal{position:absolute;right:8px;top:34px;font-size:12px;background:#17202b;border:1px solid var(--line);padding:6px 8px;border-radius:10px;cursor:pointer}
   </style>
 </head>
 <body>
@@ -65,11 +46,12 @@
             <label for="issuerSecret">Issuer Secret</label>
             <input type="password" id="issuerSecret" name="issuerSecret" placeholder="sEd…" required />
             <button type="button" class="reveal" data-toggle="issuerSecret">Show</button>
-
-            <!-- Public key preview (from backend) -->
-            <div class="inline-note" id="issuerPubKeyRow" style="display:none;">
-              <strong>Public Key:</strong> <span id="issuerPubKeyText"></span>
+            <!-- Live derived keys -->
+            <div class="hint" id="issuerKeys" style="margin-top:6px;display:none;">
+              <div><strong>Public Key:</strong> <span id="issuerPubKeyText"></span></div>
+              <div><strong>Classic Address:</strong> <span id="issuerAddrText"></span></div>
             </div>
+            <div class="hint" id="issuerKeyError" style="margin-top:6px;display:none;color:#f7a7b3;"></div>
           </div>
 
           <div class="col-6">
@@ -99,7 +81,7 @@
               autocorrect="off"
               spellcheck="false"
             />
-            <div class="hint">Use either Investor Secret (classic flow) or Investor Address (issue-only with existing trustline).</div>
+            <div class="hint">Use either Investor Secret (classic) or Investor Address (issuer-only with existing trustline).</div>
           </div>
         </div>
       </fieldset>
@@ -113,7 +95,7 @@
           </div>
           <div class="col-3">
             <label for="amount">Amount</label>
-            <input type="number" id="amount" name="amount" placeholder="10000000" required />
+            <input type="number" id="amount" name="amount" placeholder="115000" required />
           </div>
           <div class="col-3" id="limitWrap">
             <label for="limit">Trust Limit</label>
@@ -157,17 +139,70 @@
       </div>
 
       <div id="banner" class="banner"></div>
-
       <pre id="output" class="col-12">(waiting)</pre>
     </form>
   </div>
 
-  <script>
-    // --- Small helpers ---
-    const debounce = (fn, ms = 250) => {
-      let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
-    };
+  <!-- XRPL browser build for key derivation -->
+  <script src="https://unpkg.com/xrpl@2.14.0/dist/browser/xrpl-latest-min.js"></script>
 
+  <script>
+    // Live derivation: Public Key (hex) + Classic Address (r…)
+    (function () {
+      const seedEl   = document.getElementById('issuerSecret');
+      const keysWrap = document.getElementById('issuerKeys');
+      const pubEl    = document.getElementById('issuerPubKeyText');
+      const addrEl   = document.getElementById('issuerAddrText');
+      const errEl    = document.getElementById('issuerKeyError');
+
+      if (!seedEl || !keysWrap || !pubEl || !addrEl || !errEl) return;
+
+      function setError(msg) {
+        keysWrap.style.display = 'none';
+        pubEl.textContent = '';
+        addrEl.textContent = '';
+        errEl.style.display = 'block';
+        errEl.textContent = 'Public Key: ' + msg;
+      }
+
+      function clearError() {
+        errEl.style.display = 'none';
+        errEl.textContent = '';
+      }
+
+      function updateKeys() {
+        const seed = (seedEl.value || '').trim();
+        if (!seed) {
+          clearError();
+          keysWrap.style.display = 'none';
+          pubEl.textContent = '';
+          addrEl.textContent = '';
+          return;
+        }
+        if (typeof window.xrpl === 'undefined' || !xrpl?.Wallet) {
+          setError('XRPL libraries not available');
+          return;
+        }
+        try {
+          const wallet = xrpl.Wallet.fromSeed(seed);  // derives ed25519 keypair by default
+          // Public key (hex, starts with ED… for ed25519)
+          pubEl.textContent = wallet.publicKey;
+          // Classic address (starts with r…)
+          addrEl.textContent = wallet.address;
+          clearError();
+          keysWrap.style.display = 'block';
+        } catch (e) {
+          setError('Invalid seed — ' + (e?.message || 'incorrect'));
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', updateKeys);
+      seedEl.addEventListener('input', updateKeys);
+    })();
+  </script>
+
+  <script>
+    // --- existing app logic (unchanged) ---
     const form = document.getElementById('txForm');
     const output = document.getElementById('output');
     const banner = document.getElementById('banner');
@@ -179,7 +214,6 @@
     const holderAddressWrap = document.getElementById('holderAddressWrap');
     const limitWrap = document.getElementById('limitWrap');
 
-    // Show/hide secrets
     document.querySelectorAll('.reveal').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = btn.getAttribute('data-toggle');
@@ -190,17 +224,13 @@
       });
     });
 
-    // Mode toggle
     function applyMode() {
       const issuerOnly = mode.value === 'issuer-only';
       holderSecretWrap.style.display = issuerOnly ? 'none' : 'block';
       holderAddressWrap.style.display = issuerOnly ? 'block' : 'none';
       limitWrap.style.display = issuerOnly ? 'none' : 'block';
-      if (issuerOnly) {
-        document.getElementById('holderSecret').value = '';
-      } else {
-        document.getElementById('holderAddress').value = '';
-      }
+      if (issuerOnly) document.getElementById('holderSecret').value = '';
+      else document.getElementById('holderAddress').value = '';
     }
     mode.addEventListener('change', applyMode);
     applyMode();
@@ -211,59 +241,8 @@
       output.textContent = '(waiting)';
       banner.className = 'banner';
       banner.textContent = '';
-      // reset pubkey row
-      const row = document.getElementById('issuerPubKeyRow');
-      const text = document.getElementById('issuerPubKeyText');
-      if (row && text) { row.style.display = 'none'; text.textContent = ''; }
     });
 
-    // --- Public key preview (via backend) ---
-    (function setupPubKeyPreview() {
-      const seedEl = document.getElementById('issuerSecret');
-      const rowEl  = document.getElementById('issuerPubKeyRow');
-      const textEl = document.getElementById('issuerPubKeyText');
-      if (!seedEl || !rowEl || !textEl) return;
-
-      async function fetchPubKey(seed) {
-        try {
-          const res = await fetch('/api/derive-key', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ seed: seed })
-          });
-          const data = await res.json().catch(() => ({}));
-          if (data && data.publicKey) {
-            rowEl.className = 'inline-note ok';
-            textEl.textContent = data.publicKey;
-          } else {
-            rowEl.className = 'inline-note err';
-            textEl.textContent = data?.message ? `Invalid seed — ${data.message}` : 'Invalid seed';
-          }
-        } catch (e) {
-          rowEl.className = 'inline-note err';
-          textEl.textContent = 'Public Key lookup failed';
-        }
-      }
-
-      const handler = debounce(() => {
-        const seed = (seedEl.value || '').trim();
-        if (!seed) {
-          rowEl.style.display = 'none';
-          textEl.textContent = '';
-          return;
-        }
-        rowEl.style.display = 'block';
-        rowEl.className = 'inline-note working';
-        textEl.textContent = '…';
-        fetchPubKey(seed);
-      }, 250);
-
-      seedEl.addEventListener('input', handler);
-      // initial render
-      if ((seedEl.value || '').trim()) handler();
-    })();
-
-    // --- Submit handler (unchanged) ---
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       banner.className = 'banner';
@@ -304,7 +283,6 @@
 
       const hasHolder = !!data.holderSecret;
       const hasInvestorAddr = !!data.investorAddress;
-
       if (issuerOnly && !hasInvestorAddr) {
         banner.className = 'banner err';
         banner.textContent = 'Investor address is required in Issuer-only mode.';
@@ -326,7 +304,6 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
         });
-
         const contentType = res.headers.get('content-type') || '';
         const rawText = await res.text();
         const parsed = contentType.includes('application/json') ? (JSON.parse(rawText || '{}')) : rawText;
