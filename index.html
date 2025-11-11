@@ -6,53 +6,53 @@
   <title>XRPL — TrustSet + Payment Form</title>
   <style>
     :root {
-      --bg:#0b0f14; --card:#121821; --ink:#e9eef3; --muted:#9fb0c0; --line:#233042;
-      --accent:#2e7aef; --accent-2:#1f5dc0; --ok:#1fbf75; --err:#d9415a; --warn:#f4b740;
+      --bg: #0b0f14; --card: #121821; --ink: #e9eef3; --muted: #9fb0c0; --line:#233042;
+      --accent: #2e7aef; --accent-2:#1f5dc0; --ok:#1fbf75; --err:#d9415a; --warn:#f4b740;
     }
-    * { box-sizing:border-box }
-    body { font-family:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif; background:var(--bg); color:var(--ink); margin:0; padding:24px }
-    .container { max-width:980px; margin:auto; background:var(--card); padding:28px; border-radius:16px; box-shadow:0 10px 40px rgba(0,0,0,.35); border:1px solid var(--line) }
-    h1 { margin:0 0 4px; font-size:24px }
-    p.sub { margin:0 0 18px; color:var(--muted) }
+    * { box-sizing: border-box; }
+    body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif; background: var(--bg); color: var(--ink); margin: 0; padding: 24px; }
+    .container { max-width: 980px; margin: auto; background: var(--card); padding: 28px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,.35); border: 1px solid var(--line); }
+    h1 { margin: 0 0 4px; font-size: 24px; }
+    p.sub { margin: 0 0 18px; color: var(--muted); }
 
-    form { display:grid; grid-template-columns:repeat(12,1fr); gap:16px }
-    fieldset { grid-column:1/-1; border:1px solid var(--line); border-radius:14px; padding:14px }
-    legend { padding:0 8px; color:#cfe1f5; font-size:13px }
+    form { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
+    fieldset { grid-column: 1 / -1; border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+    legend { padding: 0 8px; color: #cfe1f5; font-size: 13px; }
 
-    .col-6 { grid-column:span 6 }
-    .col-4 { grid-column:span 4 }
-    .col-3 { grid-column:span 3 }
-    .col-12{ grid-column:span 12 }
-    @media (max-width:760px){ .col-6,.col-4,.col-3{ grid-column:span 12 } }
+    .col-6 { grid-column: span 6; }
+    .col-4 { grid-column: span 4; }
+    .col-3 { grid-column: span 3; }
+    .col-12 { grid-column: span 12; }
+    @media (max-width: 760px) { .col-6, .col-4, .col-3 { grid-column: span 12; } }
 
-    label { display:block; margin-bottom:6px; color:#c3d2e1; font-size:13px }
-    input,select,textarea{ width:100%; padding:12px; border-radius:12px; border:1px solid #2c3b51; background:#0f141c; color:var(--ink); outline:none }
-    input:focus,select:focus,textarea:focus{ border-color:var(--accent); box-shadow:0 0 0 4px rgba(46,122,239,.18) }
+    label { display: block; margin-bottom: 6px; color: #c3d2e1; font-size: 13px; }
+    input, select, textarea { width: 100%; padding: 12px 12px; border-radius: 12px; border: 1px solid #2c3b51; background: #0f141c; color: var(--ink); outline: none; }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(46,122,239,.18); }
 
-    .row{ display:grid; grid-template-columns:repeat(12,1fr); gap:16px }
-    .hint{ color:var(--muted); font-size:12px; margin-top:6px }
-    .hint.valid{ color:var(--ok); font-weight:600 }
-    .hint.invalid{ color:var(--err); font-weight:600 }
+    .row { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
+    .hint { color: var(--muted); font-size: 12px; margin-top: 6px; }
+    .hint.crit { color: #f2a8b0; }
 
-    .controls{ grid-column:1/-1; display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:4px }
-    button{ background:var(--accent); color:#fff; border:0; padding:12px 16px; border-radius:12px; font-weight:700; cursor:pointer }
-    button:hover{ background:var(--accent-2) }
-    button.ghost{ background:transparent; border:1px solid var(--line); color:var(--ink) }
+    .controls { grid-column: 1 / -1; display: flex; gap: 12px; align-items: center; justify-content: flex-start; flex-wrap: wrap; margin-top: 4px; }
+    button { background: var(--accent); color: #fff; border: 0; padding: 12px 16px; border-radius: 12px; font-weight: 700; cursor: pointer; }
+    button:hover { background: var(--accent-2); }
+    button.ghost { background: transparent; border: 1px solid var(--line); color: var(--ink); }
+    button.danger { background: var(--err); }
 
-    .banner{ grid-column:1/-1; padding:12px 14px; border-radius:12px; border:1px solid var(--line); background:#0e1620; display:none }
-    .banner.ok{ display:block; border-color:#1a6f48 }
-    .banner.err{ display:block; border-color:#7a2431 }
+    .banner { grid-column: 1 / -1; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: #0e1620; display: none; }
+    .banner.ok { display: block; border-color: #1a6f48; }
+    .banner.err { display: block; border-color: #7a2431; }
 
-    pre{ background:#0b0f14; border:1px solid var(--line); padding:12px; border-radius:12px; overflow:auto; margin-top:16px }
+    pre { background: #0b0f14; border: 1px solid var(--line); padding: 12px; border-radius: 12px; overflow: auto; margin-top: 16px; }
 
-    .secret-wrap{ position:relative }
-    .reveal{ position:absolute; right:8px; top:34px; font-size:12px; background:#17202b; border:1px solid var(--line); padding:6px 8px; border-radius:10px; cursor:pointer }
+    .secret-wrap { position: relative; }
+    .reveal { position: absolute; right: 8px; top: 34px; font-size: 12px; background: #17202b; border: 1px solid var(--line); padding: 6px 8px; border-radius: 10px; cursor: pointer; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>XRPL — TrustSet + Payment</h1>
-    <p class="sub">Fill the fields, submit, and the server will run your script. Two-column layout on desktop; stacks on mobile.</p>
+    <p class="sub">Fill the fields, submit, and the server will run your script.</p>
 
     <form id="txForm" novalidate>
       <fieldset>
@@ -63,8 +63,8 @@
             <input type="password" id="issuerSecret" name="issuerSecret" placeholder="sEd…" required />
             <button type="button" class="reveal" data-toggle="issuerSecret">Show</button>
 
-            <!-- Public key preview / validation lives here -->
-            <div class="hint" id="issuerPubKeyRow" style="margin-top:6px; display:none;">
+            <!-- Public key preview row -->
+            <div class="hint crit" id="issuerPubKeyRow" style="margin-top:6px; display:none;">
               <strong>Public Key:</strong> <span id="issuerPubKeyText"></span>
             </div>
           </div>
@@ -91,7 +91,10 @@
               name="holderAddress"
               placeholder="r..."
               pattern="^r[1-9A-HJ-NP-Za-km-z]{25,34}$"
-              autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
+              autocomplete="off"
+              autocapitalize="off"
+              autocorrect="off"
+              spellcheck="false"
             />
             <div class="hint">Use either Investor Secret (classic flow) or Investor Address (issue-only with existing trustline).</div>
           </div>
@@ -103,7 +106,7 @@
         <div class="row">
           <div class="col-6">
             <label for="currencyCode">Currency Code</label>
-            <input type="text" id="currencyCode" name="currencyCode" placeholder="GDCP20251029" required />
+            <input type="text" id="currencyCode" name="currencyCode" placeholder="GDCP20251110" required />
           </div>
           <div class="col-3">
             <label for="amount">Amount</label>
@@ -151,82 +154,70 @@
       </div>
 
       <div id="banner" class="banner"></div>
+
       <pre id="output" class="col-12">(waiting)</pre>
     </form>
   </div>
 
-  <!-- Robust XRPL loader (UMD with fallbacks, then public-key preview) -->
+  <!-- XRPL browser build (deferred) -->
+  <script src="https://unpkg.com/xrpl@2.14.0/dist/browser/xrpl-latest-min.js" defer></script>
+
+  <!-- Live Public Key preview -->
   <script>
-    (function XRPLLoaderAndPreview() {
+    (function () {
       const seedEl = document.getElementById('issuerSecret');
       const rowEl  = document.getElementById('issuerPubKeyRow');
       const textEl = document.getElementById('issuerPubKeyText');
 
       if (!seedEl || !rowEl || !textEl) return;
 
-      function inject(src, timeoutMs = 6000) {
-        return new Promise((resolve, reject) => {
-          const s = document.createElement('script');
-          let done = false;
-          const t = setTimeout(() => { if (!done){ done = true; s.remove(); reject(new Error('timeout')); } }, timeoutMs);
-          s.src = src; s.async = true;
-          s.onload = () => { if (!done){ done = true; clearTimeout(t); resolve(); } };
-          s.onerror = () => { if (!done){ done = true; clearTimeout(t); reject(new Error('load_failed')); } };
-          document.head.appendChild(s);
-        });
-      }
+      const stripZW = (s) => (s || '').replace(/[\s\u200B-\u200D\uFEFF]/g, '');
+      const base58  = /^[1-9A-HJ-NP-Za-km-z]+$/;
 
-      async function ensureXRPL() {
-        if (window.xrpl && window.xrpl.Wallet) return true;
-        const cdn = [
-          'https://unpkg.com/xrpl@2.14.0/dist/browser/xrpl-latest-min.js',
-          'https://cdn.jsdelivr.net/npm/xrpl@2.14.0/dist/browser/xrpl-latest-min.js'
-        ];
-        for (const u of cdn) {
-          try { await inject(u); if (window.xrpl && window.xrpl.Wallet) return true; } catch {}
-        }
-        // ESM fallback (no global) → normalize
-        try {
-          const mod = await import('https://esm.sh/xrpl@2.14.0?bundle');
-          if (mod && mod.Wallet) { window.xrpl = { Wallet: mod.Wallet }; return true; }
-        } catch {}
-        return false;
-      }
-
-      function show(text, cls) {
+      function render(msg) {
         rowEl.style.display = 'block';
-        textEl.textContent = text;
-        textEl.classList.remove('valid','invalid');
-        if (cls) textEl.classList.add(cls);
+        textEl.textContent = msg;
       }
 
-      async function updatePubKey() {
-        const seed = (seedEl.value || '').trim();
-        if (!seed) { rowEl.style.display = 'none'; textEl.textContent = ''; textEl.className = 'hint'; return; }
+      function derive() {
+        const raw = seedEl.value || '';
+        const seed = stripZW(raw);
 
-        const ok = await ensureXRPL();
-        if (!ok) return show('(xrpl library failed to load)', 'invalid');
+        if (!seed) { rowEl.style.display = 'none'; textEl.textContent = ''; return; }
 
-        // quick shape check before deriving
-        if (!/^s[0-9A-Za-z]+$/.test(seed)) return show('Invalid seed — malformed', 'invalid');
+        if (!('xrpl' in window) || !xrpl?.Wallet?.fromSeed) {
+          render('(loading xrpl…)');
+          return;
+        }
 
         try {
           const wallet = xrpl.Wallet.fromSeed(seed);
-          return show(wallet.publicKey, 'valid');
-        } catch {
-          return show('Invalid seed — incorrect', 'invalid');
+          render(wallet.publicKey);
+        } catch (e) {
+          // Help the user: distinguish malformed vs incorrect
+          if (!/^s[0-9A-Za-z]{5,}$/.test(seed) || !base58.test(seed)) {
+            render('Invalid seed — malformed characters/length');
+          } else {
+            render('Invalid seed — incorrect');
+          }
         }
       }
 
-      window.addEventListener('load', updatePubKey);
-      seedEl.addEventListener('input', updatePubKey);
-      seedEl.addEventListener('change', updatePubKey);
-      seedEl.addEventListener('blur', updatePubKey);
+      // Re-derive when user types
+      seedEl.addEventListener('input', derive);
+      document.addEventListener('DOMContentLoaded', derive);
+
+      // Retry until xrpl loads (defer-tag should load it soon)
+      let tries = 0;
+      const timer = setInterval(() => {
+        if (window.xrpl) { derive(); clearInterval(timer); }
+        else if (++tries > 40) { render('(xrpl library failed to load)'); clearInterval(timer); }
+      }, 100);
     })();
   </script>
 
+  <!-- Existing app logic (unchanged except for earlier dup cleanup) -->
   <script>
-    // UI + submit logic
     const form = document.getElementById('txForm');
     const output = document.getElementById('output');
     const banner = document.getElementById('banner');
@@ -260,56 +251,92 @@
     applyMode();
 
     resetBtn?.addEventListener('click', () => {
-      form.reset(); applyMode();
-      output.textContent = '(waiting)'; banner.className = 'banner'; banner.textContent = '';
+      form.reset();
+      applyMode();
+      output.textContent = '(waiting)';
+      banner.className = 'banner';
+      banner.textContent = '';
     });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      banner.className = 'banner'; banner.textContent = '';
-      output.textContent = 'Submitting…'; submitBtn.disabled = true;
+      banner.className = 'banner';
+      banner.textContent = '';
+      output.textContent = 'Submitting…';
+      submitBtn.disabled = true;
 
       const issuerOnly = mode.value === 'issuer-only';
+      const holderSecret = issuerOnly ? '' : (form.holderSecret?.value || '');
+
       const data = {
         issuerSecret: form.issuerSecret.value,
-        holderSecret: issuerOnly ? undefined : (form.holderSecret?.value || undefined),
+        holderSecret: holderSecret || undefined,
         currencyCode: form.currencyCode.value,
         amount: form.amount.value,
-        limit: form.limit.value || undefined,
+        limit: form.limit.value,
         freeze: form.freeze.value === 'true',
         network: form.network.value,
         verbose: form.verbose.value === 'true'
       };
+      if ('limit' in data && (data.limit === '' || data.limit == null)) delete data.limit;
+
+      const CLASSIC_ADDR = /^r[1-9A-HJ-NP-Za-km-z]{25,34}$/;
+      const cleanAddr = (a) => (a ?? '').trim().replace(/\u200B/g, '');
 
       if (issuerOnly) {
-        const CLASSIC_ADDR = /^r[1-9A-HJ-NP-Za-km-z]{25,34}$/;
-        const addr = (document.getElementById('holderAddress').value || '').trim().replace(/\u200B/g,'');
+        const raw = document.querySelector('#holderAddress')?.value ?? '';
+        const addr = cleanAddr(raw);
         if (!addr || !CLASSIC_ADDR.test(addr)) {
-          banner.className = 'banner err'; banner.textContent = 'Investor address format looks invalid.';
-          output.textContent = '(address pattern mismatch)'; submitBtn.disabled = false; return;
+          banner.className = 'banner err';
+          banner.textContent = 'Investor address format looks invalid.';
+          output.textContent = '(address pattern mismatch)';
+          submitBtn.disabled = false;
+          return;
         }
         data.investorAddress = addr;
-      } else if (!data.holderSecret) {
-        banner.className = 'banner err'; banner.textContent = 'Holder secret is required in classic mode.';
-        output.textContent = '(missing holder secret)'; submitBtn.disabled = false; return;
+      }
+
+      const hasHolder = !!data.holderSecret;
+      const hasInvestorAddr = !!data.investorAddress;
+      if (issuerOnly && !hasInvestorAddr) {
+        banner.className = 'banner err';
+        banner.textContent = 'Investor address is required in Issuer-only mode.';
+        output.textContent = '(missing investor address)';
+        submitBtn.disabled = false;
+        return;
+      }
+      if (!issuerOnly && !hasHolder) {
+        banner.className = 'banner err';
+        banner.textContent = 'Holder secret is required in classic mode.';
+        output.textContent = '(missing holder secret)';
+        submitBtn.disabled = false;
+        return;
       }
 
       try {
         const res = await fetch('/api/xrpl/execute', {
-          method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
         });
-        const ct = res.headers.get('content-type') || '';
-        const raw = await res.text();
-        const payload = ct.includes('application/json') ? (JSON.parse(raw || '{}')) : raw;
+
+        const contentType = res.headers.get('content-type') || '';
+        const rawText = await res.text();
+        const parsed = contentType.includes('application/json') ? (JSON.parse(rawText || '{}')) : rawText;
 
         if (!res.ok) {
-          banner.className = 'banner err'; banner.textContent = `HTTP ${res.status} ${res.statusText}`;
-          output.textContent = typeof payload === 'string' ? raw : JSON.stringify(payload,null,2); return;
+          banner.className = 'banner err';
+          banner.textContent = `HTTP ${res.status} ${res.statusText}`;
+          output.textContent = typeof parsed === 'string' ? rawText : JSON.stringify(parsed, null, 2);
+          return;
         }
-        banner.className = 'banner ok'; banner.textContent = 'Success';
-        output.textContent = typeof payload === 'string' ? raw : JSON.stringify(payload,null,2);
+
+        banner.className = 'banner ok';
+        banner.textContent = 'Success';
+        output.textContent = typeof parsed === 'string' ? rawText : JSON.stringify(parsed, null, 2);
       } catch (err) {
-        banner.className = 'banner err'; banner.textContent = 'Network error';
+        banner.className = 'banner err';
+        banner.textContent = 'Network error';
         output.textContent = 'Network/Fetch error: ' + (err?.message || err);
       } finally {
         submitBtn.disabled = false;
