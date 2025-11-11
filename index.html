@@ -6,8 +6,8 @@
   <title>XRPL — TrustSet + Payment Form</title>
   <style>
     :root {
-      --bg: #0b0f14; --card: #121821; --ink: #e9eef3; --muted: #9fb0c0; --line:#233042;
-      --accent: #2e7aef; --accent-2:#1f5dc0; --ok:#1fbf75; --err:#d9415a; --warn:#f4b740;
+      --bg:#0b0f14; --card:#121821; --ink:#e9eef3; --muted:#9fb0c0; --line:#233042;
+      --accent:#2e7aef; --accent-2:#1f5dc0; --ok:#1fbf75; --err:#d9415a; --warn:#f4b740;
     }
     * { box-sizing: border-box; }
     body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif; background: var(--bg); color: var(--ink); margin: 0; padding: 24px; }
@@ -31,13 +31,13 @@
 
     .row { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
     .hint { color: var(--muted); font-size: 12px; margin-top: 6px; }
-    .hint.crit { color: #f2a8b0; }
+    .hint.err { color: var(--err); }
+    .hint.ok { color: var(--ok); }
 
     .controls { grid-column: 1 / -1; display: flex; gap: 12px; align-items: center; justify-content: flex-start; flex-wrap: wrap; margin-top: 4px; }
     button { background: var(--accent); color: #fff; border: 0; padding: 12px 16px; border-radius: 12px; font-weight: 700; cursor: pointer; }
     button:hover { background: var(--accent-2); }
     button.ghost { background: transparent; border: 1px solid var(--line); color: var(--ink); }
-    button.danger { background: var(--err); }
 
     .banner { grid-column: 1 / -1; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: #0e1620; display: none; }
     .banner.ok { display: block; border-color: #1a6f48; }
@@ -62,9 +62,8 @@
             <label for="issuerSecret">Issuer Secret</label>
             <input type="password" id="issuerSecret" name="issuerSecret" placeholder="sEd…" required />
             <button type="button" class="reveal" data-toggle="issuerSecret">Show</button>
-
             <!-- Public key preview row -->
-            <div class="hint crit" id="issuerPubKeyRow" style="margin-top:6px; display:none;">
+            <div class="hint" id="issuerPubKeyRow" style="margin-top:6px; display:none;">
               <strong>Public Key:</strong> <span id="issuerPubKeyText"></span>
             </div>
           </div>
@@ -91,10 +90,7 @@
               name="holderAddress"
               placeholder="r..."
               pattern="^r[1-9A-HJ-NP-Za-km-z]{25,34}$"
-              autocomplete="off"
-              autocapitalize="off"
-              autocorrect="off"
-              spellcheck="false"
+              autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
             />
             <div class="hint">Use either Investor Secret (classic flow) or Investor Address (issue-only with existing trustline).</div>
           </div>
@@ -159,11 +155,12 @@
     </form>
   </div>
 
-  <!-- XRPL browser build (deferred) -->
-  <script src="https://unpkg.com/xrpl@2.14.0/dist/browser/xrpl-latest-min.js" defer></script>
+  <!-- XRPL browser build + ripple-keypairs fallback for public key derivation -->
+  <script src="https://unpkg.com/xrpl@2.14.0/dist/browser/xrpl-latest-min.js"></script>
+  <script src="https://unpkg.com/ripple-keypairs/dist/ripple-keypairs.min.js"></script>
 
-  <!-- Live Public Key preview -->
   <script>
+    // === Public key preview under Issuer Secret (with fallback) ===
     (function () {
       const seedEl = document.getElementById('issuerSecret');
       const rowEl  = document.getElementById('issuerPubKeyRow');
@@ -171,53 +168,58 @@
 
       if (!seedEl || !rowEl || !textEl) return;
 
-      const stripZW = (s) => (s || '').replace(/[\s\u200B-\u200D\uFEFF]/g, '');
-      const base58  = /^[1-9A-HJ-NP-Za-km-z]+$/;
-
-      function render(msg) {
-        rowEl.style.display = 'block';
-        textEl.textContent = msg;
+      function cleanSeed(s) {
+        return (s || '')
+          .replace(/\s+/g, '')        // strip all spaces
+          .replace(/\u200B/g, '')     // strip zero-width
+          .trim();
       }
 
-      function derive() {
-        const raw = seedEl.value || '';
-        const seed = stripZW(raw);
+      function derivePublicKey(seed) {
+        // Try xrpl first
+        if (typeof window !== 'undefined' && window.xrpl && xrpl.Wallet) {
+          try {
+            const w = xrpl.Wallet.fromSeed(seed);
+            if (w && w.publicKey) return w.publicKey;
+          } catch (e) { /* fall through */ }
+        }
+        // Fallback: ripple-keypairs
+        if (typeof window !== 'undefined' && window.rippleKeypairs && rippleKeypairs.deriveKeypair) {
+          try {
+            const kp = rippleKeypairs.deriveKeypair(seed); // auto-detects ed25519/secp256k1 from seed prefix
+            if (kp && kp.publicKey) return kp.publicKey;
+          } catch (e) { /* fall through */ }
+        }
+        throw new Error('invalid-seed');
+      }
 
-        if (!seed) { rowEl.style.display = 'none'; textEl.textContent = ''; return; }
-
-        if (!('xrpl' in window) || !xrpl?.Wallet?.fromSeed) {
-          render('(loading xrpl…)');
+      function updatePubKey() {
+        const raw = cleanSeed(seedEl.value);
+        if (!raw) {
+          rowEl.style.display = 'none';
+          textEl.textContent = '';
+          textEl.className = '';
           return;
         }
-
         try {
-          const wallet = xrpl.Wallet.fromSeed(seed);
-          render(wallet.publicKey);
-        } catch (e) {
-          // Help the user: distinguish malformed vs incorrect
-          if (!/^s[0-9A-Za-z]{5,}$/.test(seed) || !base58.test(seed)) {
-            render('Invalid seed — malformed characters/length');
-          } else {
-            render('Invalid seed — incorrect');
-          }
+          const pub = derivePublicKey(raw);
+          rowEl.style.display = 'block';
+          textEl.textContent = pub;
+          textEl.className = 'ok';
+        } catch (_) {
+          rowEl.style.display = 'block';
+          textEl.textContent = 'Invalid seed — incorrect';
+          textEl.className = 'err';
         }
       }
 
-      // Re-derive when user types
-      seedEl.addEventListener('input', derive);
-      document.addEventListener('DOMContentLoaded', derive);
-
-      // Retry until xrpl loads (defer-tag should load it soon)
-      let tries = 0;
-      const timer = setInterval(() => {
-        if (window.xrpl) { derive(); clearInterval(timer); }
-        else if (++tries > 40) { render('(xrpl library failed to load)'); clearInterval(timer); }
-      }, 100);
+      document.addEventListener('DOMContentLoaded', updatePubKey);
+      seedEl.addEventListener('input', updatePubKey);
     })();
   </script>
 
-  <!-- Existing app logic (unchanged except for earlier dup cleanup) -->
   <script>
+    // === App logic (unchanged except for earlier cleanups) ===
     const form = document.getElementById('txForm');
     const output = document.getElementById('output');
     const banner = document.getElementById('banner');
@@ -229,6 +231,7 @@
     const holderAddressWrap = document.getElementById('holderAddressWrap');
     const limitWrap = document.getElementById('limitWrap');
 
+    // Show/hide secrets
     document.querySelectorAll('.reveal').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = btn.getAttribute('data-toggle');
@@ -239,6 +242,7 @@
       });
     });
 
+    // Mode toggle
     function applyMode() {
       const issuerOnly = mode.value === 'issuer-only';
       holderSecretWrap.style.display = issuerOnly ? 'none' : 'block';
@@ -278,11 +282,12 @@
         network: form.network.value,
         verbose: form.verbose.value === 'true'
       };
+
       if ('limit' in data && (data.limit === '' || data.limit == null)) delete data.limit;
 
+      // Clean + validate investor address when issuer-only
       const CLASSIC_ADDR = /^r[1-9A-HJ-NP-Za-km-z]{25,34}$/;
       const cleanAddr = (a) => (a ?? '').trim().replace(/\u200B/g, '');
-
       if (issuerOnly) {
         const raw = document.querySelector('#holderAddress')?.value ?? '';
         const addr = cleanAddr(raw);
