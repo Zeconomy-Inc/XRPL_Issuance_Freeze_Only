@@ -31,6 +31,14 @@
 
     .row { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
     .hint { color: var(--muted); font-size: 12px; margin-top: 6px; }
+    .hint.invalid {
+  color: #d9415a !important; /* error red */
+  font-weight: 600;
+}
+.hint.valid {
+  color: #1fbf75 !important; /* success green */
+  font-weight: 600;
+}
 
     .controls { grid-column: 1 / -1; display: flex; gap: 12px; align-items: center; justify-content: flex-start; flex-wrap: wrap; margin-top: 4px; }
     button { background: var(--accent); color: #fff; border: 0; padding: 12px 16px; border-radius: 12px; font-weight: 700; cursor: pointer; }
@@ -61,6 +69,10 @@
             <label for="issuerSecret">Issuer Secret</label>
             <input type="password" id="issuerSecret" name="issuerSecret" placeholder="sEd…" required />
             <button type="button" class="reveal" data-toggle="issuerSecret">Show</button>
+            <!-- Public key preview row -->
+            <div class="hint" id="issuerPubKeyRow" style="margin-top:6px; display:none;">
+              <strong>Public Key:</strong> <span id="issuerPubKeyText"></span>
+            </div>
           </div>
 
           <div class="col-6">
@@ -77,21 +89,21 @@
             <button type="button" class="reveal" data-toggle="holderSecret">Show</button>
           </div>
 
-         <div class="col-6" id="holderAddressWrap">
-    <label for="holderAddress">Investor Address (r…)</label>
-    <input
-      type="text"
-      id="holderAddress"
-      name="holderAddress"
-      placeholder="r..."
-      pattern="^r[1-9A-HJ-NP-Za-km-z]{25,34}$"
-      autocomplete="off"
-      autocapitalize="off"
-      autocorrect="off"
-      spellcheck="false"
-    />
-    <div class="hint">Use either Investor Secret (classic flow) or Investor Address (issue-only with existing trustline).</div>
-  </div>
+          <div class="col-6" id="holderAddressWrap">
+            <label for="holderAddress">Investor Address (r…)</label>
+            <input
+              type="text"
+              id="holderAddress"
+              name="holderAddress"
+              placeholder="r..."
+              pattern="^r[1-9A-HJ-NP-Za-km-z]{25,34}$"
+              autocomplete="off"
+              autocapitalize="off"
+              autocorrect="off"
+              spellcheck="false"
+            />
+            <div class="hint">Use either Investor Secret (classic flow) or Investor Address (issue-only with existing trustline).</div>
+          </div>
         </div>
       </fieldset>
 
@@ -153,6 +165,42 @@
     </form>
   </div>
 
+  <!-- XRPL browser build for public key derivation -->
+  <script src="https://unpkg.com/xrpl@2.14.0/dist/browser/xrpl-latest-min.js"></script>
+
+  <script>
+    // Live public key preview under Issuer Secret
+    (function () {
+      const seedEl = document.getElementById('issuerSecret');
+      const rowEl  = document.getElementById('issuerPubKeyRow');
+      const textEl = document.getElementById('issuerPubKeyText');
+
+      if (!seedEl || !rowEl || !textEl) return;
+
+      function updatePubKey() {
+        const seed = (seedEl.value || '').trim();
+       if (!seed) {
+  rowEl.style.display = 'none';
+  textEl.textContent = '';
+  textEl.className = 'hint';
+  return;
+}
+try {
+  const wallet = xrpl.Wallet.fromSeed(seed);
+  textEl.textContent = wallet.publicKey;
+  rowEl.style.display = 'block';
+  textEl.className = 'hint valid';   // ✅ turns green
+} catch (_) {
+  rowEl.style.display = 'block';
+  textEl.textContent = 'Invalid seed — malformed or incorrect';
+  textEl.className = 'hint invalid'; // ❌ turns red
+}
+
+      document.addEventListener('DOMContentLoaded', updatePubKey);
+      seedEl.addEventListener('input', updatePubKey);
+    })();
+  </script>
+
   <script>
     const form = document.getElementById('txForm');
     const output = document.getElementById('output');
@@ -211,57 +259,56 @@
 
       const issuerOnly = mode.value === 'issuer-only';
       const holderSecret = issuerOnly ? '' : (form.holderSecret?.value || '');
-      const holderAddress = issuerOnly ? (form.holderAddress?.value || '') : '';
 
       const data = {
-  issuerSecret: form.issuerSecret.value,
-  holderSecret: holderSecret || undefined,
-  currencyCode: form.currencyCode.value,
-  amount: form.amount.value,
-  limit: form.limit.value,
-  freeze: form.freeze.value === 'true',
-  network: form.network.value,
-  verbose: form.verbose.value === 'true'
-};
-      // If limit exists but is an empty string, remove it:
-if ('limit' in data && (data.limit === '' || data.limit == null)) delete data.limit;
-      // client-side checks: exactly one of holderSecret or investorAddress
-      // Clean + validate investor address when issuer-only mode
+        issuerSecret: form.issuerSecret.value,
+        holderSecret: holderSecret || undefined,
+        currencyCode: form.currencyCode.value,
+        amount: form.amount.value,
+        limit: form.limit.value,
+        freeze: form.freeze.value === 'true',
+        network: form.network.value,
+        verbose: form.verbose.value === 'true'
+      };
+
+      if ('limit' in data && (data.limit === '' || data.limit == null)) delete data.limit;
+
+      // Clean + validate investor address for issuer-only mode
       const CLASSIC_ADDR = /^r[1-9A-HJ-NP-Za-km-z]{25,34}$/;
       const cleanAddr = (a) => (a ?? '').trim().replace(/\u200B/g, '');
+
       if (issuerOnly) {
-  const raw = document.querySelector('#holderAddress')?.value ?? '';
-  const addr = cleanAddr(raw);
+        const raw = document.querySelector('#holderAddress')?.value ?? '';
+        const addr = cleanAddr(raw);
 
-  if (!addr || !CLASSIC_ADDR.test(addr)) {
-    banner.className = 'banner err';
-    banner.textContent = 'Investor address format looks invalid.';
-    output.textContent = '(address pattern mismatch)';
-    submitBtn.disabled = false;
-    return;
-  }
-  data.investorAddress = addr; // send only investorAddress
-}
+        if (!addr || !CLASSIC_ADDR.test(addr)) {
+          banner.className = 'banner err';
+          banner.textContent = 'Investor address format looks invalid.';
+          output.textContent = '(address pattern mismatch)';
+          submitBtn.disabled = false;
+          return;
+        }
+        data.investorAddress = addr; // send only investorAddress
+      }
+
       const hasHolder = !!data.holderSecret;
-const hasInvestorAddr = !!data.investorAddress;
+      const hasInvestorAddr = !!data.investorAddress;
 
-// In issuer-only mode, require investorAddress; in classic mode, require holderSecret.
-if (issuerOnly && !hasInvestorAddr) {
-  banner.className = 'banner err';
-  banner.textContent = 'Investor address is required in Issuer-only mode.';
-  output.textContent = '(missing investor address)';
-  submitBtn.disabled = false;
-  return;
-}
-if (!issuerOnly && !hasHolder) {
-  banner.className = 'banner err';
-  banner.textContent = 'Holder secret is required in classic mode.';
-  output.textContent = '(missing holder secret)';
-  submitBtn.disabled = false;
-  return;
-}
+      if (issuerOnly && !hasInvestorAddr) {
+        banner.className = 'banner err';
+        banner.textContent = 'Investor address is required in Issuer-only mode.';
+        output.textContent = '(missing investor address)';
+        submitBtn.disabled = false;
+        return;
+      }
+      if (!issuerOnly && !hasHolder) {
+        banner.className = 'banner err';
+        banner.textContent = 'Holder secret is required in classic mode.';
+        output.textContent = '(missing holder secret)';
+        submitBtn.disabled = false;
+        return;
+      }
 
-const raw = document.querySelector('#holderAddress')?.value ?? '';
       try {
         const res = await fetch('/api/xrpl/execute', {
           method: 'POST',
@@ -270,19 +317,19 @@ const raw = document.querySelector('#holderAddress')?.value ?? '';
         });
 
         const contentType = res.headers.get('content-type') || '';
-        const raw = await res.text();
-        const parsed = contentType.includes('application/json') ? (JSON.parse(raw || '{}')) : raw;
+        const rawText = await res.text();
+        const parsed = contentType.includes('application/json') ? (JSON.parse(rawText || '{}')) : rawText;
 
         if (!res.ok) {
           banner.className = 'banner err';
           banner.textContent = `HTTP ${res.status} ${res.statusText}`;
-          output.textContent = typeof parsed === 'string' ? raw : JSON.stringify(parsed, null, 2);
+          output.textContent = typeof parsed === 'string' ? rawText : JSON.stringify(parsed, null, 2);
           return;
         }
 
         banner.className = 'banner ok';
         banner.textContent = 'Success';
-        output.textContent = typeof parsed === 'string' ? raw : JSON.stringify(parsed, null, 2);
+        output.textContent = typeof parsed === 'string' ? rawText : JSON.stringify(parsed, null, 2);
       } catch (err) {
         banner.className = 'banner err';
         banner.textContent = 'Network error';
