@@ -74,7 +74,10 @@
               <strong>Public Key:</strong> <span id="issuerPubKeyText"></span>
             </div>
           </div>
-
+          <!-- Validation error row -->
+<div class="hint" id="issuerSecretError" style="margin-top:6px; color:#d9415a; display:none;">
+  Invalid seed
+</div>
           <div class="col-6">
             <label for="mode">Mode</label>
             <select id="mode" name="mode">
@@ -339,5 +342,70 @@ try {
       }
     });
   </script>
+  <script src="https://unpkg.com/xrpl@2.14.0/dist/browser/xrpl-latest-min.js"></script>
+  <script>
+  (function () {
+    const seedEl   = document.getElementById('issuerSecret');
+    const keyRow   = document.getElementById('issuerPubKeyRow');
+    const keyText  = document.getElementById('issuerPubKeyText');
+    const errRow   = document.getElementById('issuerSecretError');
+
+    if (!seedEl || !keyRow || !keyText || !errRow) return;
+
+    // Wait until xrpl is available (handles CDN load timing)
+    function whenXRPLReady(cb, tries = 0) {
+      if (window.xrpl && xrpl.Wallet) return cb();
+      if (tries > 200) return; // ~20s max
+      setTimeout(() => whenXRPLReady(cb, tries + 1), 100);
+    }
+
+    function hideAll() {
+      keyRow.style.display = 'none';
+      errRow.style.display = 'none';
+      keyText.textContent = '';
+    }
+
+    function showKey(text) {
+      errRow.style.display = 'none';
+      keyRow.style.display = 'block';
+      keyText.textContent = text;
+    }
+
+    function showError(msg) {
+      keyRow.style.display = 'none';
+      errRow.style.display = 'block';
+      errRow.textContent = msg || 'Invalid seed';
+    }
+
+    function update() {
+      const seed = (seedEl.value || '').trim();
+      if (!seed) return hideAll();
+
+      // Optional pre-check: only attempt derive if it looks like a classic XRPL seed
+      // Most ed25519 seeds start with "sEd". If yours can be secp256k1 too, remove this gate.
+      if (!/^s[A-Za-z0-9]{5,}/.test(seed)) {
+        return showError('Invalid seed');
+      }
+
+      try {
+        const wallet = xrpl.Wallet.fromSeed(seed);
+        // If construction succeeds, it's a valid seed → show public key
+        showKey(wallet.publicKey);
+      } catch (e) {
+        showError('Invalid seed');
+      }
+    }
+
+    whenXRPLReady(() => {
+      // Update immediately and on change
+      update();
+      seedEl.addEventListener('input', update);
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) update();
+      });
+    });
+  })();
+</script>
+
 </body>
 </html>
