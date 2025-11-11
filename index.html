@@ -5,57 +5,38 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>XRPL — TrustSet + Payment Form</title>
   <style>
-    :root {
-      --bg: #0b0f14; --card: #121821; --ink: #e9eef3; --muted: #9fb0c0; --line:#233042;
-      --accent: #2e7aef; --accent-2:#1f5dc0; --ok:#1fbf75; --err:#d9415a; --warn:#f4b740;
-    }
-    * { box-sizing: border-box; }
-    body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif; background: var(--bg); color: var(--ink); margin: 0; padding: 24px; }
-    .container { max-width: 980px; margin: auto; background: var(--card); padding: 28px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,.35); border: 1px solid var(--line); }
-    h1 { margin: 0 0 4px; font-size: 24px; }
-    p.sub { margin: 0 0 18px; color: var(--muted); }
-
-    form { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
-    fieldset { grid-column: 1 / -1; border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
-    legend { padding: 0 8px; color: #cfe1f5; font-size: 13px; }
-
-    .col-6 { grid-column: span 6; }
-    .col-4 { grid-column: span 4; }
-    .col-3 { grid-column: span 3; }
-    .col-12 { grid-column: span 12; }
-    @media (max-width: 760px) { .col-6, .col-4, .col-3 { grid-column: span 12; } }
-
-    label { display: block; margin-bottom: 6px; color: #c3d2e1; font-size: 13px; }
-    input, select, textarea { width: 100%; padding: 12px 12px; border-radius: 12px; border: 1px solid #2c3b51; background: #0f141c; color: var(--ink); outline: none; }
-    input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(46,122,239,.18); }
-
-    .row { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
-    .hint { color: var(--muted); font-size: 12px; margin-top: 6px; }
-
-    .controls { grid-column: 1 / -1; display: flex; gap: 12px; align-items: center; justify-content: flex-start; flex-wrap: wrap; margin-top: 4px; }
-    button { background: var(--accent); color: #fff; border: 0; padding: 12px 16px; border-radius: 12px; font-weight: 700; cursor: pointer; }
-    button:hover { background: var(--accent-2); }
-    button.ghost { background: transparent; border: 1px solid var(--line); color: var(--ink); }
-    button.danger { background: var(--err); }
-
-    .banner { grid-column: 1 / -1; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: #0e1620; display: none; }
-    .banner.ok { display: block; border-color: #1a6f48; }
-    .banner.err { display: block; border-color: #7a2431; }
-
-    pre { background: #0b0f14; border: 1px solid var(--line); padding: 12px; border-radius: 12px; overflow: auto; margin-top: 16px; }
-
-    .secret-wrap { position: relative; }
-    .reveal { position: absolute; right: 8px; top: 34px; font-size: 12px; background: #17202b; border: 1px solid var(--line); padding: 6px 8px; border-radius: 10px; cursor: pointer; }
-    .kv { margin-top: 6px; font-size: 12px; color: var(--muted); }
-    .kv strong { color: #d8e7f8; }
-    .kv.err { color: var(--err); }
-    .kv.ok  { color: var(--ok); }
+    :root { --bg:#0b0f14; --card:#121821; --ink:#e9eef3; --muted:#9fb0c0; --line:#233042; --accent:#2e7aef; --accent-2:#1f5dc0; --ok:#1fbf75; --err:#d9415a; }
+    *{box-sizing:border-box}
+    body{font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;background:var(--bg);color:var(--ink);margin:0;padding:24px}
+    .container{max-width:980px;margin:auto;background:var(--card);padding:28px;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.35);border:1px solid var(--line)}
+    h1{margin:0 0 4px;font-size:24px}
+    p.sub{margin:0 0 18px;color:var(--muted)}
+    form{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+    fieldset{grid-column:1 / -1;border:1px solid var(--line);border-radius:14px;padding:14px}
+    legend{padding:0 8px;color:#cfe1f5;font-size:13px}
+    .col-6{grid-column:span 6}.col-4{grid-column:span 4}.col-3{grid-column:span 3}.col-12{grid-column:span 12}
+    @media(max-width:760px){.col-6,.col-4,.col-3{grid-column:span 12}}
+    label{display:block;margin-bottom:6px;color:#c3d2e1;font-size:13px}
+    input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px solid #2c3b51;background:#0f141c;color:var(--ink);outline:none}
+    input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(46,122,239,.18)}
+    .row{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+    .hint{color:var(--muted);font-size:12px;margin-top:6px}
+    .controls{grid-column:1 / -1;display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:4px}
+    button{background:var(--accent);color:#fff;border:0;padding:12px 16px;border-radius:12px;font-weight:700;cursor:pointer}
+    button:hover{background:var(--accent-2)}
+    button.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+    .banner{grid-column:1 / -1;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:#0e1620;display:none}
+    .banner.ok{display:block;border-color:#1a6f48}
+    .banner.err{display:block;border-color:#7a2431}
+    pre{background:#0b0f14;border:1px solid var(--line);padding:12px;border-radius:12px;overflow:auto;margin-top:16px}
+    .secret-wrap{position:relative}
+    .reveal{position:absolute;right:8px;top:34px;font-size:12px;background:#17202b;border:1px solid var(--line);padding:6px 8px;border-radius:10px;cursor:pointer}
   </style>
 </head>
 <body>
   <div class="container">
     <h1>XRPL — TrustSet + Payment</h1>
-    <p class="sub">Fill the fields, submit, and the server will run your script.</p>
+    <p class="sub">Fill the fields, submit, and the server will run your script. Two-column layout on desktop; stacks on mobile.</p>
 
     <form id="txForm" novalidate>
       <fieldset>
@@ -65,13 +46,10 @@
             <label for="issuerSecret">Issuer Secret</label>
             <input type="password" id="issuerSecret" name="issuerSecret" placeholder="sEd…" required />
             <button type="button" class="reveal" data-toggle="issuerSecret">Show</button>
-
-            <!-- Live key preview -->
-            <div id="issuerKeyRow" class="kv" style="display:none;">
-              <div><strong>Public Key:</strong> <span id="issuerPubKeyText"></span></div>
-              <div><strong>Address:</strong> <span id="issuerAddrText"></span></div>
+            <!-- Public key preview row -->
+            <div class="hint" id="issuerPubKeyRow" style="margin-top:6px; display:none;">
+              <strong>Public Key:</strong> <span id="issuerPubKeyText"></span>
             </div>
-            <div id="issuerKeyErr" class="kv err" style="display:none;"></div>
           </div>
 
           <div class="col-6">
@@ -111,11 +89,11 @@
         <div class="row">
           <div class="col-6">
             <label for="currencyCode">Currency Code</label>
-            <input type="text" id="currencyCode" name="currencyCode" placeholder="GDCP20251110" required />
+            <input type="text" id="currencyCode" name="currencyCode" placeholder="GDCP20251029" required />
           </div>
           <div class="col-3">
             <label for="amount">Amount</label>
-            <input type="number" id="amount" name="amount" placeholder="100000" required />
+            <input type="number" id="amount" name="amount" placeholder="10000000" required />
           </div>
           <div class="col-3" id="limitWrap">
             <label for="limit">Trust Limit</label>
@@ -164,85 +142,108 @@
     </form>
   </div>
 
-  <!-- XRPL browser build (primary) -->
-  <script src="https://cdn.jsdelivr.net/npm/xrpl@2.14.0/dist/browser/xrpl.min.js"></script>
-  <!-- Fallback lib for seed→key if xrpl derivation throws -->
+  <!-- Libraries: load all with defer; our code waits for readiness -->
+  <script src="https://unpkg.com/xrpl@2.14.0/dist/browser/xrpl-latest-min.js" defer crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/ripple-keypairs@1.3.0/dist/ripple-keypairs.min.js" defer crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/ripple-address-codec@4.2.5/dist/index.umd.js" defer crossorigin="anonymous"></script>
+
   <script>
-    (function () {
-      // Lazy-load ripple-keypairs only if needed
-      let keypairsLoaded = false;
-      function loadKeypairs() {
-        return new Promise((resolve, reject) => {
-          if (keypairsLoaded && window.rippleKeypairs) return resolve();
-          const s = document.createElement('script');
-          s.src = 'https://cdn.jsdelivr.net/npm/ripple-keypairs@1.3.1/dist/npm/index.js';
-          s.async = true;
-          s.onload = () => { keypairsLoaded = true; resolve(); };
-          s.onerror = () => reject(new Error('ripple-keypairs failed to load'));
-          document.head.appendChild(s);
-        });
+    // Utility: wait for any of the libs to be ready
+    function waitForLibs(timeoutMs = 4000) {
+      const start = Date.now();
+      return new Promise((resolve) => {
+        (function check() {
+          const libs = {
+            xrpl: typeof window.xrpl !== 'undefined',
+            rippleKeypairs: typeof window.rippleKeypairs !== 'undefined',
+            rippleCodec: typeof window.rippleAddressCodec !== 'undefined' || typeof window.ripple !== 'undefined'
+          };
+          if (libs.xrpl || libs.rippleKeypairs) return resolve({ ok: true, libs });
+          if (Date.now() - start > timeoutMs) return resolve({ ok: false, libs });
+          setTimeout(check, 100);
+        })();
+      });
+    }
+
+    // Public key derivation with robust fallbacks
+    async function derivePublicKeyFromSeed(seed) {
+      seed = (seed || '').trim();
+      if (!seed) throw new Error('Seed is empty');
+
+      // Try xrpl.Wallet first (supports sEd / s... etc.)
+      if (window.xrpl && window.xrpl.Wallet && typeof window.xrpl.Wallet.fromSeed === 'function') {
+        try {
+          const w = window.xrpl.Wallet.fromSeed(seed);
+          if (!w || !w.publicKey) throw new Error('xrpl wallet missing key');
+          return w.publicKey; // hex
+        } catch (e) {
+          // fallthrough to ripple-keypairs
+        }
       }
 
+      // Fallback to ripple-keypairs (browser UMD)
+      if (window.rippleKeypairs && typeof window.rippleKeypairs.deriveKeypair === 'function') {
+        try {
+          const kp = window.rippleKeypairs.deriveKeypair(seed); // works for sEd... and secp seeds
+          if (!kp || !kp.publicKey) throw new Error('ripple-keypairs derive failed');
+          return kp.publicKey; // hex
+        } catch (e) {
+          throw new Error('Invalid seed — ripple-keypairs could not derive a key');
+        }
+      }
+
+      throw new Error('XRPL libraries not available');
+    }
+
+    // UI wiring for public key preview
+    (function () {
       const seedEl = document.getElementById('issuerSecret');
-      const rowEl  = document.getElementById('issuerKeyRow');
-      const textPk = document.getElementById('issuerPubKeyText');
-      const textAd = document.getElementById('issuerAddrText');
-      const errEl  = document.getElementById('issuerKeyErr');
+      const rowEl  = document.getElementById('issuerPubKeyRow');
+      const textEl = document.getElementById('issuerPubKeyText');
 
-      const sanitize = (s) =>
-        (s || '')
-          .replace(/\u200B/g, '')   // zero-width space
-          .replace(/\uFEFF/g, '')   // BOM
-          .trim();
+      if (!seedEl || !rowEl || !textEl) return;
 
-      async function updateKeys() {
-        const seed = sanitize(seedEl.value);
+      function setMessage(msg) {
+        rowEl.style.display = 'block';
+        textEl.textContent = msg;
+      }
+
+      async function updatePubKey() {
+        const seed = (seedEl.value || '').trim();
         if (!seed) {
           rowEl.style.display = 'none';
-          errEl.style.display = 'none';
-          textPk.textContent = '';
-          textAd.textContent = '';
+          textEl.textContent = '';
           return;
         }
 
-        // Try xrpl first
-        try {
-          if (!window.xrpl || !window.xrpl.Wallet) throw new Error('xrpl not ready');
-          const wallet = window.xrpl.Wallet.fromSeed(seed);
-          textPk.textContent = wallet.publicKey;
-          textAd.textContent = wallet.address;
-          errEl.style.display = 'none';
-          rowEl.style.display = 'block';
+        // Basic shape check for obvious typos
+        if (!/^s[A-Za-z0-9]{10,60}$/.test(seed)) {
+          setMessage('Invalid seed — malformed');
           return;
-        } catch (e1) {
-          // Fallback: ripple-keypairs
-          try {
-            await loadKeypairs();
-            if (!window.rippleKeypairs) throw new Error('ripple-keypairs not ready');
-            // deriveKeypair returns {publicKey, privateKey}
-            const kp = window.rippleKeypairs.deriveKeypair(seed);
-            textPk.textContent = kp.publicKey || '(no pubkey)';
-            // derive classic address from public key
-            const addr = window.rippleKeypairs.deriveAddress(kp.publicKey);
-            textAd.textContent = addr || '(no address)';
-            errEl.style.display = 'none';
-            rowEl.style.display = 'block';
-            return;
-          } catch (e2) {
-            // Show error detail
-            rowEl.style.display = 'none';
-            errEl.textContent = `Public Key: Invalid seed — ${e2 && e2.message ? e2.message : 'unknown error'}`;
-            errEl.style.display = 'block';
-          }
+        }
+
+        const { ok, libs } = await waitForLibs();
+        if (!ok) {
+          setMessage('XRPL libraries failed to load');
+          return;
+        }
+
+        try {
+          const pub = await derivePublicKeyFromSeed(seed);
+          rowEl.style.display = 'block';
+          textEl.textContent = pub; // hex public key
+        } catch (e) {
+          setMessage('Invalid seed — ' + (e && e.message ? e.message : 'unknown error'));
         }
       }
 
-      document.addEventListener('DOMContentLoaded', updateKeys);
-      seedEl.addEventListener('input', updateKeys);
+      document.addEventListener('DOMContentLoaded', updatePubKey);
+      seedEl.addEventListener('input', updatePubKey);
     })();
   </script>
 
   <script>
+    // --- Existing app logic (unchanged) ---
     const form = document.getElementById('txForm');
     const output = document.getElementById('output');
     const banner = document.getElementById('banner');
@@ -254,7 +255,6 @@
     const holderAddressWrap = document.getElementById('holderAddressWrap');
     const limitWrap = document.getElementById('limitWrap');
 
-    // Show/hide secrets
     document.querySelectorAll('.reveal').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = btn.getAttribute('data-toggle');
@@ -265,7 +265,6 @@
       });
     });
 
-    // Mode toggle
     function applyMode() {
       const issuerOnly = mode.value === 'issuer-only';
       holderSecretWrap.style.display = issuerOnly ? 'none' : 'block';
@@ -285,7 +284,6 @@
       banner.textContent = '';
     });
 
-    // Submit (unchanged)
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       banner.className = 'banner';
