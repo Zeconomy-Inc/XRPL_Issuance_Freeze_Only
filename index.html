@@ -6,54 +6,47 @@
   <title>XRPL — TrustSet + Payment Form</title>
   <style>
     :root {
-      --bg: #0b0f14; --card: #121821; --ink: #e9eef3; --muted: #9fb0c0; --line:#233042;
-      --accent: #2e7aef; --accent-2:#1f5dc0; --ok:#1fbf75; --err:#d9415a; --warn:#f4b740;
+      --bg:#0b0f14; --card:#121821; --ink:#e9eef3; --muted:#9fb0c0; --line:#233042;
+      --accent:#2e7aef; --accent-2:#1f5dc0; --ok:#1fbf75; --err:#d9415a; --warn:#f4b740;
     }
-    * { box-sizing: border-box; }
-    body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif; background: var(--bg); color: var(--ink); margin: 0; padding: 24px; }
-    .container { max-width: 980px; margin: auto; background: var(--card); padding: 28px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,.35); border: 1px solid var(--line); }
-    h1 { margin: 0 0 4px; font-size: 24px; }
-    p.sub { margin: 0 0 18px; color: var(--muted); }
+    * { box-sizing:border-box }
+    body { font-family:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif; background:var(--bg); color:var(--ink); margin:0; padding:24px }
+    .container { max-width:980px; margin:auto; background:var(--card); padding:28px; border-radius:16px; box-shadow:0 10px 40px rgba(0,0,0,.35); border:1px solid var(--line) }
+    h1 { margin:0 0 4px; font-size:24px }
+    p.sub { margin:0 0 18px; color:var(--muted) }
 
-    form { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
-    fieldset { grid-column: 1 / -1; border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
-    legend { padding: 0 8px; color: #cfe1f5; font-size: 13px; }
+    form { display:grid; grid-template-columns:repeat(12,1fr); gap:16px }
+    fieldset { grid-column:1/-1; border:1px solid var(--line); border-radius:14px; padding:14px }
+    legend { padding:0 8px; color:#cfe1f5; font-size:13px }
 
-    .col-6 { grid-column: span 6; }
-    .col-4 { grid-column: span 4; }
-    .col-3 { grid-column: span 3; }
-    .col-12 { grid-column: span 12; }
-    @media (max-width: 760px) { .col-6, .col-4, .col-3 { grid-column: span 12; } }
+    .col-6 { grid-column:span 6 }
+    .col-4 { grid-column:span 4 }
+    .col-3 { grid-column:span 3 }
+    .col-12{ grid-column:span 12 }
+    @media (max-width:760px){ .col-6,.col-4,.col-3{ grid-column:span 12 } }
 
-    label { display: block; margin-bottom: 6px; color: #c3d2e1; font-size: 13px; }
-    input, select, textarea { width: 100%; padding: 12px 12px; border-radius: 12px; border: 1px solid #2c3b51; background: #0f141c; color: var(--ink); outline: none; }
-    input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(46,122,239,.18); }
+    label { display:block; margin-bottom:6px; color:#c3d2e1; font-size:13px }
+    input,select,textarea{ width:100%; padding:12px; border-radius:12px; border:1px solid #2c3b51; background:#0f141c; color:var(--ink); outline:none }
+    input:focus,select:focus,textarea:focus{ border-color:var(--accent); box-shadow:0 0 0 4px rgba(46,122,239,.18) }
 
-    .row { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
-    .hint { color: var(--muted); font-size: 12px; margin-top: 6px; }
-    .hint.invalid {
-  color: #d9415a !important; /* error red */
-  font-weight: 600;
-}
-.hint.valid {
-  color: #1fbf75 !important; /* success green */
-  font-weight: 600;
-}
+    .row{ display:grid; grid-template-columns:repeat(12,1fr); gap:16px }
+    .hint{ color:var(--muted); font-size:12px; margin-top:6px }
+    .hint.valid{ color:var(--ok); font-weight:600 }
+    .hint.invalid{ color:var(--err); font-weight:600 }
 
-    .controls { grid-column: 1 / -1; display: flex; gap: 12px; align-items: center; justify-content: flex-start; flex-wrap: wrap; margin-top: 4px; }
-    button { background: var(--accent); color: #fff; border: 0; padding: 12px 16px; border-radius: 12px; font-weight: 700; cursor: pointer; }
-    button:hover { background: var(--accent-2); }
-    button.ghost { background: transparent; border: 1px solid var(--line); color: var(--ink); }
-    button.danger { background: var(--err); }
+    .controls{ grid-column:1/-1; display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:4px }
+    button{ background:var(--accent); color:#fff; border:0; padding:12px 16px; border-radius:12px; font-weight:700; cursor:pointer }
+    button:hover{ background:var(--accent-2) }
+    button.ghost{ background:transparent; border:1px solid var(--line); color:var(--ink) }
 
-    .banner { grid-column: 1 / -1; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: #0e1620; display: none; }
-    .banner.ok { display: block; border-color: #1a6f48; }
-    .banner.err { display: block; border-color: #7a2431; }
+    .banner{ grid-column:1/-1; padding:12px 14px; border-radius:12px; border:1px solid var(--line); background:#0e1620; display:none }
+    .banner.ok{ display:block; border-color:#1a6f48 }
+    .banner.err{ display:block; border-color:#7a2431 }
 
-    pre { background: #0b0f14; border: 1px solid var(--line); padding: 12px; border-radius: 12px; overflow: auto; margin-top: 16px; }
+    pre{ background:#0b0f14; border:1px solid var(--line); padding:12px; border-radius:12px; overflow:auto; margin-top:16px }
 
-    .secret-wrap { position: relative; }
-    .reveal { position: absolute; right: 8px; top: 34px; font-size: 12px; background: #17202b; border: 1px solid var(--line); padding: 6px 8px; border-radius: 10px; cursor: pointer; }
+    .secret-wrap{ position:relative }
+    .reveal{ position:absolute; right:8px; top:34px; font-size:12px; background:#17202b; border:1px solid var(--line); padding:6px 8px; border-radius:10px; cursor:pointer }
   </style>
 </head>
 <body>
@@ -69,15 +62,13 @@
             <label for="issuerSecret">Issuer Secret</label>
             <input type="password" id="issuerSecret" name="issuerSecret" placeholder="sEd…" required />
             <button type="button" class="reveal" data-toggle="issuerSecret">Show</button>
-            <!-- Public key preview row -->
+
+            <!-- Public key preview / validation lives here -->
             <div class="hint" id="issuerPubKeyRow" style="margin-top:6px; display:none;">
               <strong>Public Key:</strong> <span id="issuerPubKeyText"></span>
             </div>
           </div>
-          <!-- Validation error row -->
-<div class="hint" id="issuerSecretError" style="margin-top:6px; color:#d9415a; display:none;">
-  Invalid seed
-</div>
+
           <div class="col-6">
             <label for="mode">Mode</label>
             <select id="mode" name="mode">
@@ -100,10 +91,7 @@
               name="holderAddress"
               placeholder="r..."
               pattern="^r[1-9A-HJ-NP-Za-km-z]{25,34}$"
-              autocomplete="off"
-              autocapitalize="off"
-              autocorrect="off"
-              spellcheck="false"
+              autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
             />
             <div class="hint">Use either Investor Secret (classic flow) or Investor Address (issue-only with existing trustline).</div>
           </div>
@@ -163,127 +151,82 @@
       </div>
 
       <div id="banner" class="banner"></div>
-
       <pre id="output" class="col-12">(waiting)</pre>
     </form>
   </div>
 
-  <!-- XRPL browser build for public key derivation -->
-<script>
-  // Robust loader: jsDelivr → unpkg → ESM import fallback
-  (function () {
-    const seedEl = document.getElementById('issuerSecret');
-    const rowEl  = document.getElementById('issuerPubKeyRow');
-    const textEl = document.getElementById('issuerPubKeyText');
-
-    if (!seedEl || !rowEl || !textEl) return;
-
-    // helper to inject <script>
-    function addScript(src) {
-      return new Promise((resolve, reject) => {
-        const s = document.createElement('script');
-        s.src = src;
-        s.async = true;
-        s.onload = () => resolve();
-        s.onerror = () => reject(new Error('Failed to load ' + src));
-        document.head.appendChild(s);
-      });
-    }
-
-    // Try globals (UMD) → then ESM
-    async function loadXRPL() {
-      // already loaded?
-      if (window.xrpl && window.xrpl.Wallet) return window.xrpl;
-
-      // 1) jsDelivr UMD
-      try {
-        await addScript('https://cdn.jsdelivr.net/npm/xrpl@2.14.0/dist/browser/xrpl-latest-min.js');
-        if (window.xrpl && window.xrpl.Wallet) return window.xrpl;
-      } catch {}
-
-      // 2) unpkg UMD
-      try {
-        await addScript('https://unpkg.com/xrpl@2.14.0/dist/browser/xrpl-latest-min.js');
-        if (window.xrpl && window.xrpl.Wallet) return window.xrpl;
-      } catch {}
-
-      // 3) ESM fallback (no global) – dynamic import
-      try {
-        const mod = await import('https://esm.sh/xrpl@2.14.0?bundle');
-        // normalize shape to look like the UMD
-        if (mod && mod.Wallet) return { Wallet: mod.Wallet };
-      } catch {}
-
-      throw new Error('xrpl library failed to load');
-    }
-
-    let xrplLibPromise = null;
-    function getXRPL() {
-      if (!xrplLibPromise) xrplLibPromise = loadXRPL();
-      return xrplLibPromise;
-    }
-
-    function show(text) {
-      rowEl.style.display = 'block';
-      textEl.textContent = text;
-    }
-
-    async function updatePubKey() {
-      const seed = (seedEl.value || '').trim();
-      if (!seed) {
-        rowEl.style.display = 'none';
-        textEl.textContent = '';
-        return;
-      }
-      try {
-        const xrpl = await getXRPL();
-        const wallet = xrpl.Wallet.fromSeed(seed);
-        show(wallet.publicKey); // e.g., ED… hex
-      } catch (e) {
-        show('(xrpl library failed to load)');
-      }
-    }
-
-    // initial + live
-    document.addEventListener('DOMContentLoaded', updatePubKey);
-    seedEl.addEventListener('input', updatePubKey);
-  })();
-</script>
-
+  <!-- Robust XRPL loader (UMD with fallbacks, then public-key preview) -->
   <script>
-    // Live public key preview under Issuer Secret
-    (function () {
+    (function XRPLLoaderAndPreview() {
       const seedEl = document.getElementById('issuerSecret');
       const rowEl  = document.getElementById('issuerPubKeyRow');
       const textEl = document.getElementById('issuerPubKeyText');
 
       if (!seedEl || !rowEl || !textEl) return;
 
-      function updatePubKey() {
-        const seed = (seedEl.value || '').trim();
-       if (!seed) {
-  rowEl.style.display = 'none';
-  textEl.textContent = '';
-  textEl.className = 'hint';
-  return;
-}
-try {
-  const wallet = xrpl.Wallet.fromSeed(seed);
-  textEl.textContent = wallet.publicKey;
-  rowEl.style.display = 'block';
-  textEl.className = 'hint valid';   // ✅ turns green
-} catch (_) {
-  rowEl.style.display = 'block';
-  textEl.textContent = 'Invalid seed — malformed or incorrect';
-  textEl.className = 'hint invalid'; // ❌ turns red
-}
+      function inject(src, timeoutMs = 6000) {
+        return new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          let done = false;
+          const t = setTimeout(() => { if (!done){ done = true; s.remove(); reject(new Error('timeout')); } }, timeoutMs);
+          s.src = src; s.async = true;
+          s.onload = () => { if (!done){ done = true; clearTimeout(t); resolve(); } };
+          s.onerror = () => { if (!done){ done = true; clearTimeout(t); reject(new Error('load_failed')); } };
+          document.head.appendChild(s);
+        });
+      }
 
-      document.addEventListener('DOMContentLoaded', updatePubKey);
+      async function ensureXRPL() {
+        if (window.xrpl && window.xrpl.Wallet) return true;
+        const cdn = [
+          'https://unpkg.com/xrpl@2.14.0/dist/browser/xrpl-latest-min.js',
+          'https://cdn.jsdelivr.net/npm/xrpl@2.14.0/dist/browser/xrpl-latest-min.js'
+        ];
+        for (const u of cdn) {
+          try { await inject(u); if (window.xrpl && window.xrpl.Wallet) return true; } catch {}
+        }
+        // ESM fallback (no global) → normalize
+        try {
+          const mod = await import('https://esm.sh/xrpl@2.14.0?bundle');
+          if (mod && mod.Wallet) { window.xrpl = { Wallet: mod.Wallet }; return true; }
+        } catch {}
+        return false;
+      }
+
+      function show(text, cls) {
+        rowEl.style.display = 'block';
+        textEl.textContent = text;
+        textEl.classList.remove('valid','invalid');
+        if (cls) textEl.classList.add(cls);
+      }
+
+      async function updatePubKey() {
+        const seed = (seedEl.value || '').trim();
+        if (!seed) { rowEl.style.display = 'none'; textEl.textContent = ''; textEl.className = 'hint'; return; }
+
+        const ok = await ensureXRPL();
+        if (!ok) return show('(xrpl library failed to load)', 'invalid');
+
+        // quick shape check before deriving
+        if (!/^s[0-9A-Za-z]+$/.test(seed)) return show('Invalid seed — malformed', 'invalid');
+
+        try {
+          const wallet = xrpl.Wallet.fromSeed(seed);
+          return show(wallet.publicKey, 'valid');
+        } catch {
+          return show('Invalid seed — incorrect', 'invalid');
+        }
+      }
+
+      window.addEventListener('load', updatePubKey);
       seedEl.addEventListener('input', updatePubKey);
+      seedEl.addEventListener('change', updatePubKey);
+      seedEl.addEventListener('blur', updatePubKey);
     })();
   </script>
 
   <script>
+    // UI + submit logic
     const form = document.getElementById('txForm');
     const output = document.getElementById('output');
     const banner = document.getElementById('banner');
@@ -295,7 +238,6 @@ try {
     const holderAddressWrap = document.getElementById('holderAddressWrap');
     const limitWrap = document.getElementById('limitWrap');
 
-    // Show/hide secrets
     document.querySelectorAll('.reveal').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = btn.getAttribute('data-toggle');
@@ -306,249 +248,73 @@ try {
       });
     });
 
-    // Mode toggle
     function applyMode() {
       const issuerOnly = mode.value === 'issuer-only';
       holderSecretWrap.style.display = issuerOnly ? 'none' : 'block';
       holderAddressWrap.style.display = issuerOnly ? 'block' : 'none';
-      // Trust Limit needed only in classic mode (when creating trustline)
       limitWrap.style.display = issuerOnly ? 'none' : 'block';
-
-      // Clear the unused field to avoid accidental submission
-      if (issuerOnly) {
-        document.getElementById('holderSecret').value = '';
-      } else {
-        document.getElementById('holderAddress').value = '';
-      }
+      if (issuerOnly) document.getElementById('holderSecret').value = '';
+      else document.getElementById('holderAddress').value = '';
     }
     mode.addEventListener('change', applyMode);
     applyMode();
 
     resetBtn?.addEventListener('click', () => {
-      form.reset();
-      applyMode();
-      output.textContent = '(waiting)';
-      banner.className = 'banner';
-      banner.textContent = '';
+      form.reset(); applyMode();
+      output.textContent = '(waiting)'; banner.className = 'banner'; banner.textContent = '';
     });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      banner.className = 'banner';
-      banner.textContent = '';
-      output.textContent = 'Submitting…';
-      submitBtn.disabled = true;
+      banner.className = 'banner'; banner.textContent = '';
+      output.textContent = 'Submitting…'; submitBtn.disabled = true;
 
       const issuerOnly = mode.value === 'issuer-only';
-      const holderSecret = issuerOnly ? '' : (form.holderSecret?.value || '');
-
       const data = {
         issuerSecret: form.issuerSecret.value,
-        holderSecret: holderSecret || undefined,
+        holderSecret: issuerOnly ? undefined : (form.holderSecret?.value || undefined),
         currencyCode: form.currencyCode.value,
         amount: form.amount.value,
-        limit: form.limit.value,
+        limit: form.limit.value || undefined,
         freeze: form.freeze.value === 'true',
         network: form.network.value,
         verbose: form.verbose.value === 'true'
       };
 
-      if ('limit' in data && (data.limit === '' || data.limit == null)) delete data.limit;
-
-      // Clean + validate investor address for issuer-only mode
-      const CLASSIC_ADDR = /^r[1-9A-HJ-NP-Za-km-z]{25,34}$/;
-      const cleanAddr = (a) => (a ?? '').trim().replace(/\u200B/g, '');
-
       if (issuerOnly) {
-        const raw = document.querySelector('#holderAddress')?.value ?? '';
-        const addr = cleanAddr(raw);
-
+        const CLASSIC_ADDR = /^r[1-9A-HJ-NP-Za-km-z]{25,34}$/;
+        const addr = (document.getElementById('holderAddress').value || '').trim().replace(/\u200B/g,'');
         if (!addr || !CLASSIC_ADDR.test(addr)) {
-          banner.className = 'banner err';
-          banner.textContent = 'Investor address format looks invalid.';
-          output.textContent = '(address pattern mismatch)';
-          submitBtn.disabled = false;
-          return;
+          banner.className = 'banner err'; banner.textContent = 'Investor address format looks invalid.';
+          output.textContent = '(address pattern mismatch)'; submitBtn.disabled = false; return;
         }
-        data.investorAddress = addr; // send only investorAddress
-      }
-
-      const hasHolder = !!data.holderSecret;
-      const hasInvestorAddr = !!data.investorAddress;
-
-      if (issuerOnly && !hasInvestorAddr) {
-        banner.className = 'banner err';
-        banner.textContent = 'Investor address is required in Issuer-only mode.';
-        output.textContent = '(missing investor address)';
-        submitBtn.disabled = false;
-        return;
-      }
-      if (!issuerOnly && !hasHolder) {
-        banner.className = 'banner err';
-        banner.textContent = 'Holder secret is required in classic mode.';
-        output.textContent = '(missing holder secret)';
-        submitBtn.disabled = false;
-        return;
+        data.investorAddress = addr;
+      } else if (!data.holderSecret) {
+        banner.className = 'banner err'; banner.textContent = 'Holder secret is required in classic mode.';
+        output.textContent = '(missing holder secret)'; submitBtn.disabled = false; return;
       }
 
       try {
         const res = await fetch('/api/xrpl/execute', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
+          method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)
         });
-
-        const contentType = res.headers.get('content-type') || '';
-        const rawText = await res.text();
-        const parsed = contentType.includes('application/json') ? (JSON.parse(rawText || '{}')) : rawText;
+        const ct = res.headers.get('content-type') || '';
+        const raw = await res.text();
+        const payload = ct.includes('application/json') ? (JSON.parse(raw || '{}')) : raw;
 
         if (!res.ok) {
-          banner.className = 'banner err';
-          banner.textContent = `HTTP ${res.status} ${res.statusText}`;
-          output.textContent = typeof parsed === 'string' ? rawText : JSON.stringify(parsed, null, 2);
-          return;
+          banner.className = 'banner err'; banner.textContent = `HTTP ${res.status} ${res.statusText}`;
+          output.textContent = typeof payload === 'string' ? raw : JSON.stringify(payload,null,2); return;
         }
-
-        banner.className = 'banner ok';
-        banner.textContent = 'Success';
-        output.textContent = typeof parsed === 'string' ? rawText : JSON.stringify(parsed, null, 2);
+        banner.className = 'banner ok'; banner.textContent = 'Success';
+        output.textContent = typeof payload === 'string' ? raw : JSON.stringify(payload,null,2);
       } catch (err) {
-        banner.className = 'banner err';
-        banner.textContent = 'Network error';
+        banner.className = 'banner err'; banner.textContent = 'Network error';
         output.textContent = 'Network/Fetch error: ' + (err?.message || err);
       } finally {
         submitBtn.disabled = false;
       }
     });
   </script>
-  <!-- XRPL browser build (defer so it loads before our code runs) -->
-<script>
-  // ---- Robust XRPL loader + public key preview ----
-  (function () {
-    const seedEl = document.getElementById('issuerSecret');
-    const rowEl  = document.getElementById('issuerPubKeyRow');
-    const textEl = document.getElementById('issuerPubKeyText');
-
-    if (!seedEl || !rowEl || !textEl) return;
-
-    function loadScript(src, timeoutMs = 6000) {
-      return new Promise((resolve, reject) => {
-        const s = document.createElement('script');
-        let done = false;
-        const timer = setTimeout(() => {
-          if (done) return;
-          done = true;
-          s.remove();
-          reject(new Error('timeout'));
-        }, timeoutMs);
-        s.src = src;
-        s.async = true;
-        s.onload = () => { if (!done) { done = true; clearTimeout(timer); resolve(); } };
-        s.onerror = () => { if (!done) { done = true; clearTimeout(timer); reject(new Error('load_failed')); } };
-        document.head.appendChild(s);
-      });
-    }
-
-    async function ensureXrpl() {
-      if (window.xrpl && window.xrpl.Wallet) return true;
-      const cdns = [
-        'https://unpkg.com/xrpl@2.14.0/dist/browser/xrpl-latest-min.js',
-        'https://cdn.jsdelivr.net/npm/xrpl@2.14.0/dist/browser/xrpl-latest-min.js',
-        'https://cdn.skypack.dev/pin/xrpl@v2.14.0-lQnYQw5k0a2Vx4o3nVf1/mode=raw,min/optimized/xrpl.js'
-      ];
-      for (const url of cdns) {
-        try { await loadScript(url, 6000); if (window.xrpl && window.xrpl.Wallet) return true; } catch {}
-      }
-      return false;
-    }
-
-    async function updatePubKey() {
-      const seed = (seedEl.value || '').trim();
-      if (!seed) {
-        rowEl.style.display = 'none';
-        textEl.textContent = '';
-        return;
-      }
-
-      const ok = await ensureXrpl();
-      if (!ok) {
-        rowEl.style.display = 'block';
-        textEl.textContent = '(xrpl library failed to load)';
-        return;
-      }
-
-      try {
-        const wallet = xrpl.Wallet.fromSeed(seed);
-        textEl.textContent = wallet.publicKey;   // hex public key
-        rowEl.style.display = 'block';
-      } catch {
-        rowEl.style.display = 'block';
-        textEl.textContent = '(invalid seed)';
-      }
-    }
-
-    // Update on load and keystrokes
-    document.addEventListener('DOMContentLoaded', updatePubKey);
-    seedEl.addEventListener('input', updatePubKey);
-  })();
-  // ---- end loader + preview ----
-</script>
-
-<script>
-  // Public key preview + validation under Issuer Secret
-  (function () {
-    const seedEl = document.getElementById('issuerSecret');
-    const rowEl  = document.getElementById('issuerPubKeyRow');
-    const textEl = document.getElementById('issuerPubKeyText');
-
-    if (!seedEl || !rowEl || !textEl) return;
-
-    // Style tweak for errors (optional)
-    const setError = (msg) => {
-      rowEl.style.display = 'block';
-      rowEl.style.color = '#f4b0b7';
-      textEl.textContent = msg;
-    };
-    const setOk = (msg) => {
-      rowEl.style.display = 'block';
-      rowEl.style.color = ''; // reset to default
-      textEl.textContent = msg;
-    };
-
-    // Wait for window.xrpl to exist (handles CDN race conditions)
-    function whenXRPLReady(fn, tries = 40) {
-      if (window.xrpl && window.xrpl.Wallet && typeof window.xrpl.Wallet.fromSeed === 'function') return fn();
-      if (tries <= 0) { setError('(xrpl library failed to load)'); return; }
-      setTimeout(() => whenXRPLReady(fn, tries - 1), 100);
-    }
-
-    function updatePubKey() {
-      const seed = (seedEl.value || '').trim();
-      if (!seed) { rowEl.style.display = 'none'; textEl.textContent = ''; return; }
-
-      whenXRPLReady(() => {
-        try {
-          // Validate basic format first: sEd… or "s" family seed
-          const looksLikeSeed = /^s[0-9A-Za-z]+$/.test(seed);
-          if (!looksLikeSeed) return setError('(malformed seed)');
-
-          const wallet = xrpl.Wallet.fromSeed(seed);
-          // If we get here without throw, the seed is valid → show the pubkey
-          setOk(wallet.publicKey);
-        } catch (e) {
-          setError('(invalid seed)');
-        }
-      });
-    }
-
-    // Update on load and on each keystroke
-    window.addEventListener('load', updatePubKey);
-    seedEl.addEventListener('input', updatePubKey);
-    seedEl.addEventListener('change', updatePubKey);
-    seedEl.addEventListener('blur', updatePubKey);
-  })();
-</script>
-
-
 </body>
 </html>
