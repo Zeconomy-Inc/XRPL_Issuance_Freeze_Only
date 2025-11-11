@@ -342,70 +342,64 @@ try {
       }
     });
   </script>
-  <script src="https://unpkg.com/xrpl@2.14.0/dist/browser/xrpl-latest-min.js"></script>
-  <script>
+  <!-- XRPL browser build (defer so it loads before our code runs) -->
+<script defer src="https://unpkg.com/xrpl@2.14.0/dist/browser/xrpl-latest-min.js"></script>
+
+<script>
+  // Public key preview + validation under Issuer Secret
   (function () {
-    const seedEl   = document.getElementById('issuerSecret');
-    const keyRow   = document.getElementById('issuerPubKeyRow');
-    const keyText  = document.getElementById('issuerPubKeyText');
-    const errRow   = document.getElementById('issuerSecretError');
+    const seedEl = document.getElementById('issuerSecret');
+    const rowEl  = document.getElementById('issuerPubKeyRow');
+    const textEl = document.getElementById('issuerPubKeyText');
 
-    if (!seedEl || !keyRow || !keyText || !errRow) return;
+    if (!seedEl || !rowEl || !textEl) return;
 
-    // Wait until xrpl is available (handles CDN load timing)
-    function whenXRPLReady(cb, tries = 0) {
-      if (window.xrpl && xrpl.Wallet) return cb();
-      if (tries > 200) return; // ~20s max
-      setTimeout(() => whenXRPLReady(cb, tries + 1), 100);
+    // Style tweak for errors (optional)
+    const setError = (msg) => {
+      rowEl.style.display = 'block';
+      rowEl.style.color = '#f4b0b7';
+      textEl.textContent = msg;
+    };
+    const setOk = (msg) => {
+      rowEl.style.display = 'block';
+      rowEl.style.color = ''; // reset to default
+      textEl.textContent = msg;
+    };
+
+    // Wait for window.xrpl to exist (handles CDN race conditions)
+    function whenXRPLReady(fn, tries = 40) {
+      if (window.xrpl && window.xrpl.Wallet && typeof window.xrpl.Wallet.fromSeed === 'function') return fn();
+      if (tries <= 0) { setError('(xrpl library failed to load)'); return; }
+      setTimeout(() => whenXRPLReady(fn, tries - 1), 100);
     }
 
-    function hideAll() {
-      keyRow.style.display = 'none';
-      errRow.style.display = 'none';
-      keyText.textContent = '';
-    }
-
-    function showKey(text) {
-      errRow.style.display = 'none';
-      keyRow.style.display = 'block';
-      keyText.textContent = text;
-    }
-
-    function showError(msg) {
-      keyRow.style.display = 'none';
-      errRow.style.display = 'block';
-      errRow.textContent = msg || 'Invalid seed';
-    }
-
-    function update() {
+    function updatePubKey() {
       const seed = (seedEl.value || '').trim();
-      if (!seed) return hideAll();
+      if (!seed) { rowEl.style.display = 'none'; textEl.textContent = ''; return; }
 
-      // Optional pre-check: only attempt derive if it looks like a classic XRPL seed
-      // Most ed25519 seeds start with "sEd". If yours can be secp256k1 too, remove this gate.
-      if (!/^s[A-Za-z0-9]{5,}/.test(seed)) {
-        return showError('Invalid seed');
-      }
+      whenXRPLReady(() => {
+        try {
+          // Validate basic format first: sEd… or "s" family seed
+          const looksLikeSeed = /^s[0-9A-Za-z]+$/.test(seed);
+          if (!looksLikeSeed) return setError('(malformed seed)');
 
-      try {
-        const wallet = xrpl.Wallet.fromSeed(seed);
-        // If construction succeeds, it's a valid seed → show public key
-        showKey(wallet.publicKey);
-      } catch (e) {
-        showError('Invalid seed');
-      }
+          const wallet = xrpl.Wallet.fromSeed(seed);
+          // If we get here without throw, the seed is valid → show the pubkey
+          setOk(wallet.publicKey);
+        } catch (e) {
+          setError('(invalid seed)');
+        }
+      });
     }
 
-    whenXRPLReady(() => {
-      // Update immediately and on change
-      update();
-      seedEl.addEventListener('input', update);
-      document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) update();
-      });
-    });
+    // Update on load and on each keystroke
+    window.addEventListener('load', updatePubKey);
+    seedEl.addEventListener('input', updatePubKey);
+    seedEl.addEventListener('change', updatePubKey);
+    seedEl.addEventListener('blur', updatePubKey);
   })();
 </script>
+
 
 </body>
 </html>
