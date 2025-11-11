@@ -343,7 +343,77 @@ try {
     });
   </script>
   <!-- XRPL browser build (defer so it loads before our code runs) -->
-<script defer src="https://unpkg.com/xrpl@2.14.0/dist/browser/xrpl-latest-min.js"></script>
+<script>
+  // ---- Robust XRPL loader + public key preview ----
+  (function () {
+    const seedEl = document.getElementById('issuerSecret');
+    const rowEl  = document.getElementById('issuerPubKeyRow');
+    const textEl = document.getElementById('issuerPubKeyText');
+
+    if (!seedEl || !rowEl || !textEl) return;
+
+    function loadScript(src, timeoutMs = 6000) {
+      return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        let done = false;
+        const timer = setTimeout(() => {
+          if (done) return;
+          done = true;
+          s.remove();
+          reject(new Error('timeout'));
+        }, timeoutMs);
+        s.src = src;
+        s.async = true;
+        s.onload = () => { if (!done) { done = true; clearTimeout(timer); resolve(); } };
+        s.onerror = () => { if (!done) { done = true; clearTimeout(timer); reject(new Error('load_failed')); } };
+        document.head.appendChild(s);
+      });
+    }
+
+    async function ensureXrpl() {
+      if (window.xrpl && window.xrpl.Wallet) return true;
+      const cdns = [
+        'https://unpkg.com/xrpl@2.14.0/dist/browser/xrpl-latest-min.js',
+        'https://cdn.jsdelivr.net/npm/xrpl@2.14.0/dist/browser/xrpl-latest-min.js',
+        'https://cdn.skypack.dev/pin/xrpl@v2.14.0-lQnYQw5k0a2Vx4o3nVf1/mode=raw,min/optimized/xrpl.js'
+      ];
+      for (const url of cdns) {
+        try { await loadScript(url, 6000); if (window.xrpl && window.xrpl.Wallet) return true; } catch {}
+      }
+      return false;
+    }
+
+    async function updatePubKey() {
+      const seed = (seedEl.value || '').trim();
+      if (!seed) {
+        rowEl.style.display = 'none';
+        textEl.textContent = '';
+        return;
+      }
+
+      const ok = await ensureXrpl();
+      if (!ok) {
+        rowEl.style.display = 'block';
+        textEl.textContent = '(xrpl library failed to load)';
+        return;
+      }
+
+      try {
+        const wallet = xrpl.Wallet.fromSeed(seed);
+        textEl.textContent = wallet.publicKey;   // hex public key
+        rowEl.style.display = 'block';
+      } catch {
+        rowEl.style.display = 'block';
+        textEl.textContent = '(invalid seed)';
+      }
+    }
+
+    // Update on load and keystrokes
+    document.addEventListener('DOMContentLoaded', updatePubKey);
+    seedEl.addEventListener('input', updatePubKey);
+  })();
+  // ---- end loader + preview ----
+</script>
 
 <script>
   // Public key preview + validation under Issuer Secret
