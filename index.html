@@ -169,7 +169,86 @@
   </div>
 
   <!-- XRPL browser build for public key derivation -->
-  <script src="https://unpkg.com/xrpl@2.14.0/dist/browser/xrpl-latest-min.js"></script>
+<script>
+  // Robust loader: jsDelivr → unpkg → ESM import fallback
+  (function () {
+    const seedEl = document.getElementById('issuerSecret');
+    const rowEl  = document.getElementById('issuerPubKeyRow');
+    const textEl = document.getElementById('issuerPubKeyText');
+
+    if (!seedEl || !rowEl || !textEl) return;
+
+    // helper to inject <script>
+    function addScript(src) {
+      return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = src;
+        s.async = true;
+        s.onload = () => resolve();
+        s.onerror = () => reject(new Error('Failed to load ' + src));
+        document.head.appendChild(s);
+      });
+    }
+
+    // Try globals (UMD) → then ESM
+    async function loadXRPL() {
+      // already loaded?
+      if (window.xrpl && window.xrpl.Wallet) return window.xrpl;
+
+      // 1) jsDelivr UMD
+      try {
+        await addScript('https://cdn.jsdelivr.net/npm/xrpl@2.14.0/dist/browser/xrpl-latest-min.js');
+        if (window.xrpl && window.xrpl.Wallet) return window.xrpl;
+      } catch {}
+
+      // 2) unpkg UMD
+      try {
+        await addScript('https://unpkg.com/xrpl@2.14.0/dist/browser/xrpl-latest-min.js');
+        if (window.xrpl && window.xrpl.Wallet) return window.xrpl;
+      } catch {}
+
+      // 3) ESM fallback (no global) – dynamic import
+      try {
+        const mod = await import('https://esm.sh/xrpl@2.14.0?bundle');
+        // normalize shape to look like the UMD
+        if (mod && mod.Wallet) return { Wallet: mod.Wallet };
+      } catch {}
+
+      throw new Error('xrpl library failed to load');
+    }
+
+    let xrplLibPromise = null;
+    function getXRPL() {
+      if (!xrplLibPromise) xrplLibPromise = loadXRPL();
+      return xrplLibPromise;
+    }
+
+    function show(text) {
+      rowEl.style.display = 'block';
+      textEl.textContent = text;
+    }
+
+    async function updatePubKey() {
+      const seed = (seedEl.value || '').trim();
+      if (!seed) {
+        rowEl.style.display = 'none';
+        textEl.textContent = '';
+        return;
+      }
+      try {
+        const xrpl = await getXRPL();
+        const wallet = xrpl.Wallet.fromSeed(seed);
+        show(wallet.publicKey); // e.g., ED… hex
+      } catch (e) {
+        show('(xrpl library failed to load)');
+      }
+    }
+
+    // initial + live
+    document.addEventListener('DOMContentLoaded', updatePubKey);
+    seedEl.addEventListener('input', updatePubKey);
+  })();
+</script>
 
   <script>
     // Live public key preview under Issuer Secret
