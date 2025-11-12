@@ -6,74 +6,84 @@
   <title>XRPL IOU Issuance Form</title>
   <style>
     :root{
-      --bg:#ffffff; --ink:#0b1220; --muted:#5b6b7f; --line:#e6e9ee;
-      --accent:#2e6df6; --accent-2:#1f53c9; --err:#d9415a;
+      --bg:#ffffff; --ink:#0e1726; --muted:#6b7a90; --line:#e6ecf3;
+      --primary:#3366ff; --primary-2:#2754db; --ok:#12b886; --err:#e03131;
+      --field:#f7f9fc;
     }
     *{box-sizing:border-box}
-    body{margin:0; background:var(--bg); color:var(--ink); font:16px/1.45 Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    .page{max-width:1024px; margin:36px auto 64px; padding:0 24px}
-    h1{margin:0 0 8px; font-size:34px; letter-spacing:.2px}
-    p.lead{margin:0 0 24px; color:var(--muted)}
-    form{display:grid; grid-template-columns:repeat(12,1fr); gap:16px}
-    .row{grid-column:1/-1; display:grid; grid-template-columns:repeat(12,1fr); gap:16px}
-    .col-12{grid-column:span 12}
-    .col-6{grid-column:span 6}
-    .col-4{grid-column:span 4}
-    .col-3{grid-column:span 3}
-    @media (max-width:860px){
-      .col-6,.col-4,.col-3{grid-column:span 12}
+    body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+    .container{max-width:1080px;margin:36px auto;padding:0 20px}
+    h1{margin:0 0 8px;font-size:40px;font-weight:800;letter-spacing:-0.02em}
+    p.lead{margin:0 0 28px;color:var(--muted)}
+
+    /* form */
+    form{display:grid;gap:18px}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+    .span-12{grid-column:span 12}
+    .span-6{grid-column:span 6}
+    .span-4{grid-column:span 4}
+    .span-3{grid-column:span 3}
+    @media (max-width:900px){
+      .span-6,.span-4,.span-3{grid-column:span 12}
     }
 
-    label{display:block; margin:6px 0 6px; font-size:14px; color:#1b2433}
-    input,select,button{font:inherit}
+    label{display:block;font-size:14px;font-weight:600;margin:2px 0 6px}
+    .hint{font-size:12px;color:var(--muted);margin-top:6px}
+
+    input,select,button{
+      font:inherit;color:inherit
+    }
     input,select{
-      width:100%; padding:12px 12px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink);
-      outline:0; transition:border-color .15s, box-shadow .15s;
+      width:100%;padding:12px 12px;border:1px solid var(--line);
+      border-radius:12px;background:var(--field);outline:none
     }
-    input:focus,select:focus{border-color:var(--accent); box-shadow:0 0 0 3px rgba(46,109,246,.15)}
-    .hint{font-size:12px; color:var(--muted); margin-top:6px}
-    .addr-line{font-size:13px; margin-top:6px}
-    .addr-line strong{font-weight:600}
-    .addr-bad{color:var(--err)}
-    .addr-ok{color:#176c46}
+    input:focus,select:focus{border-color:var(--primary);box-shadow:0 0 0 4px rgba(51,102,255,.15)}
+    .addr{color:#117a37}
 
-    .secret-wrap{position:relative}
+    .row-inline{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+    .row-inline > .cell{grid-column:span 2}
+    .row-inline > .cell.w3{grid-column:span 3}
+    .row-inline > .cell.w4{grid-column:span 4}
+    @media (max-width:900px){
+      .row-inline > .cell,.row-inline > .cell.w3,.row-inline > .cell.w4{grid-column:span 12}
+    }
+
+    .controls{display:flex;gap:12px;margin-top:4px}
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;
+      padding:12px 18px;border-radius:12px;border:1px solid transparent;
+      font-weight:700;cursor:pointer
+    }
+    .btn-primary{background:var(--primary);color:#fff}
+    .btn-primary:hover{background:var(--primary-2)}
+    .btn-ghost{background:#fff;border-color:var(--line)}
     .reveal{
-      position:absolute; right:8px; top:34px; padding:8px 12px; border-radius:10px; border:0; cursor:pointer;
-      background:var(--accent); color:#fff; font-weight:600;
+      position:absolute;right:6px;top:34px
     }
-    .reveal:hover{background:var(--accent-2)}
-
-    .controls{grid-column:1/-1; display:flex; gap:12px; margin-top:8px}
-    .btn{padding:12px 16px; border-radius:12px; border:0; cursor:pointer; font-weight:700}
-    .btn.primary{background:var(--accent); color:#fff}
-    .btn.primary:hover{background:var(--accent-2)}
-    .btn.ghost{background:#f6f8fb; border:1px solid var(--line); color:var(--ink)}
-    pre{grid-column:1/-1; background:#f7f9fc; border:1px solid var(--line); border-radius:12px; padding:12px; overflow:auto}
-
-    /* inline groups for compact layout */
-    .inline{display:grid; grid-template-columns:repeat(12,1fr); gap:16px}
+    .field-wrap{position:relative}
+    .banner{padding:10px 12px;border-radius:12px;border:1px solid var(--line);display:none}
+    .banner.ok{display:block;border-color:#1ea672;color:#0f7a49}
+    .banner.err{display:block;border-color:#d64545;color:#a11d1d}
+    pre{background:#fafcff;border:1px solid var(--line);border-radius:12px;padding:12px;overflow:auto}
   </style>
-  <!-- Optional browser fallback if /api/derive is unavailable -->
-  <script defer src="https://unpkg.com/xrpl@2.14.0/dist/browser/xrpl-latest-min.js"></script>
 </head>
 <body>
-  <div class="page">
+  <div class="container">
     <h1>XRPL IOU Issuance Form</h1>
     <p class="lead">Issue an IOU to an investor and optionally freeze the trustline after payment.</p>
 
     <form id="txForm" novalidate>
-      <!-- Secrets / Mode -->
-      <div class="row">
-        <div class="col-6 secret-wrap">
+      <!-- Top row: seed, mode, investor address -->
+      <div class="grid">
+        <div class="span-6 field-wrap">
           <label for="issuerSecret">Issuer Secret</label>
           <input type="password" id="issuerSecret" name="issuerSecret" placeholder="sEd…" autocomplete="off" />
-          <button type="button" class="reveal" data-toggle="issuerSecret">Show</button>
-          <div id="issuerAddrLine" class="addr-line"><strong>Address:</strong> <span id="issuerAddrText" class="addr-bad">Invalid seed</span></div>
+          <button type="button" class="btn btn-primary reveal" data-toggle="issuerSecret">Show</button>
+          <div class="hint">Address: <span id="issuerAddr" class="addr">—</span></div>
           <div class="hint">Seed never leaves your browser except when you submit.</div>
         </div>
 
-        <div class="col-3">
+        <div class="span-3">
           <label for="mode">Mode</label>
           <select id="mode" name="mode">
             <option value="issuer-only" selected>Issuer seed + investor address (issue & freeze)</option>
@@ -81,41 +91,33 @@
           </select>
         </div>
 
-        <div class="col-3" id="holderAddressWrap">
+        <div class="span-3" id="holderAddressWrap">
           <label for="holderAddress">Investor Address (r…)</label>
-          <input type="text" id="holderAddress" name="holderAddress" placeholder="r..." autocomplete="off" />
+          <input type="text" id="holderAddress" name="holderAddress" placeholder="r..." autocomplete="off"
+                 autocapitalize="off" autocorrect="off" spellcheck="false"
+                 pattern="^r[1-9A-HJ-NP-Za-km-z]{25,34}$" />
           <div class="hint">Use either Investor Secret (classic) or Investor Address (issuer-only with existing trustline).</div>
-        </div>
-
-        <div class="col-3" id="holderSecretWrap" style="display:none">
-          <label for="holderSecret">Holder Secret</label>
-          <input type="password" id="holderSecret" name="holderSecret" placeholder="sEd…" autocomplete="off" />
-          <button type="button" class="reveal" data-toggle="holderSecret" style="right:8px; top:34px">Show</button>
         </div>
       </div>
 
-      <!-- Token & Network in one inline row -->
-      <div class="inline">
-        <div class="col-3">
+      <!-- Single compact row: token + network -->
+      <div class="row-inline">
+        <div class="cell w3">
           <label for="currencyCode">Currency Code</label>
           <input type="text" id="currencyCode" name="currencyCode" placeholder="GDCP20251110" />
         </div>
-        <div class="col-2">
+        <div class="cell w3">
           <label for="amount">Amount</label>
-          <input type="number" id="amount" name="amount" placeholder="115000" />
+          <input type="number" id="amount" name="amount" placeholder="100000" />
         </div>
-        <div class="col-2" id="limitWrap" style="display:none">
-          <label for="limit">Trust Limit</label>
-          <input type="number" id="limit" name="limit" placeholder="1000000" />
-        </div>
-        <div class="col-2">
+        <div class="cell w3">
           <label for="freeze">Freeze after payment?</label>
           <select id="freeze" name="freeze">
             <option value="true">true</option>
             <option value="false">false</option>
           </select>
         </div>
-        <div class="col-2">
+        <div class="cell w3">
           <label for="network">Network</label>
           <select id="network" name="network">
             <option value="testnet">testnet</option>
@@ -123,164 +125,145 @@
             <option value="mainnet2">mainnet2</option>
           </select>
         </div>
-        <div class="col-1">
+        <div class="cell w3">
           <label for="verbose">Verbose</label>
           <select id="verbose" name="verbose">
-            <option value="false">false</option>
             <option value="true">true</option>
+            <option value="false" selected>false</option>
           </select>
         </div>
       </div>
 
       <div class="controls">
-        <button id="submitBtn" type="submit" class="btn primary">Submit</button>
-        <button id="resetBtn" type="button" class="btn ghost">Reset</button>
+        <button id="submitBtn" type="submit" class="btn btn-primary">Submit</button>
+        <button id="resetBtn" type="button" class="btn btn-ghost">Reset</button>
       </div>
 
+      <div id="banner" class="banner"></div>
       <pre id="output">(waiting)</pre>
     </form>
   </div>
 
-  <script>
-    // --- UI helpers
-    const $ = (q) => document.querySelector(q);
-    const CLASSIC_ADDR = /^r[1-9A-HJ-NP-Za-km-z]{25,34}$/;
-    const clean = (s) => (s ?? '').trim().replace(/\u200B/g,'');
+  <!-- XRPL browser library for seed→address derivation -->
+  <script src="https://unpkg.com/xrpl@2.14.0/dist/browser/xrpl-latest-min.js"></script>
 
-    // Show/Hide buttons
-    document.addEventListener('click', (e) => {
-      const btn = e.target.closest('.reveal');
-      if (!btn) return;
-      const id = btn.getAttribute('data-toggle');
-      const el = document.getElementById(id);
-      if (!el) return;
-      if (el.type === 'password') { el.type = 'text'; btn.textContent = 'Hide'; }
-      else { el.type = 'password'; btn.textContent = 'Show'; }
+  <script>
+    // Elements
+    const form = document.getElementById('txForm');
+    const output = document.getElementById('output');
+    const banner = document.getElementById('banner');
+    const submitBtn = document.getElementById('submitBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const mode = document.getElementById('mode');
+    const holderAddressWrap = document.getElementById('holderAddressWrap');
+    const issuerSecretEl = document.getElementById('issuerSecret');
+    const issuerAddrEl = document.getElementById('issuerAddr');
+
+    // Show/Hide seed button (blue by default)
+    document.querySelectorAll('.reveal').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-toggle');
+        const input = document.getElementById(id);
+        const type = input.type === 'password' ? 'text' : 'password';
+        input.type = type;
+        btn.textContent = type === 'password' ? 'Show' : 'Hide';
+      });
     });
 
-    // Mode toggle visibility
-    const modeSel = $('#mode');
-    const holderSecretWrap = $('#holderSecretWrap');
-    const holderAddressWrap = $('#holderAddressWrap');
-    const limitWrap = $('#limitWrap');
-
-    function applyMode() {
-      const issuerOnly = modeSel.value === 'issuer-only';
-      holderSecretWrap.style.display = issuerOnly ? 'none' : 'block';
-      holderAddressWrap.style.display = issuerOnly ? 'block' : 'none';
-      limitWrap.style.display = issuerOnly ? 'none' : 'block';
-      if (issuerOnly) { $('#holderSecret').value=''; } else { $('#holderAddress').value=''; }
-    }
-    modeSel.addEventListener('change', applyMode);
-    applyMode();
-
-    // --- Derive classic address under seed (prefer backend /api/derive; fallback to browser xrpl)
-    const seedEl = $('#issuerSecret');
-    const addrText = $('#issuerAddrText');
-    const addrLine = $('#issuerAddrLine');
-
-    let tDerive = 0;
-    async function deriveClassic(seed) {
-      // 1) Try backend helper
-      try {
-        const r = await fetch('/api/derive', {
-          method:'POST',
-          headers:{'content-type':'application/json'},
-          body: JSON.stringify({ seed })
-        });
-        if (r.ok) {
-          const j = await r.json();
-          if (j && j.address && CLASSIC_ADDR.test(j.address)) return j.address;
-        }
-      } catch(_) {}
-
-      // 2) Fallback: browser XRPL
-      try {
-        if (window.xrpl?.Wallet) {
-          const w = xrpl.Wallet.fromSeed(seed);
-          return w?.classicAddress || '';
-        }
-      } catch(_) {}
-      return '';
-    }
-
-    function updateSeedPreview() {
-      const s = clean(seedEl.value);
-      if (!s) {
-        addrText.textContent = 'Enter seed';
-        addrText.className = 'addr-bad';
+    // Derive classic address from seed
+    function updateIssuerAddress() {
+      const seed = (issuerSecretEl.value || '').trim();
+      if (!seed) {
+        issuerAddrEl.textContent = '—';
         return;
       }
-      clearTimeout(tDerive);
-      tDerive = setTimeout(async () => {
-        const addr = await deriveClassic(s);
-        if (addr && CLASSIC_ADDR.test(addr)) {
-          addrText.textContent = addr;
-          addrText.className = 'addr-ok';
-        } else {
-          addrText.textContent = 'Invalid seed';
-          addrText.className = 'addr-bad';
-        }
-      }, 200);
+      try {
+        const wallet = xrpl.Wallet.fromSeed(seed);
+        issuerAddrEl.textContent = wallet.classicAddress;
+      } catch (_) {
+        issuerAddrEl.textContent = 'Invalid seed';
+      }
     }
-    seedEl.addEventListener('input', updateSeedPreview);
-    document.addEventListener('DOMContentLoaded', updateSeedPreview);
+    issuerSecretEl.addEventListener('input', updateIssuerAddress);
+    document.addEventListener('DOMContentLoaded', updateIssuerAddress);
 
-    // --- Submit
-    const form = $('#txForm');
-    const output = $('#output');
-    const submitBtn = $('#submitBtn');
-    const bannerSet = (msg,isErr=false) => {
-      output.textContent = msg;
-      output.style.borderColor = isErr ? '#f3c0c7' : 'var(--line)';
-      output.style.background = isErr ? '#fff6f7' : '#f7f9fc';
-    };
+    // Mode switch: show investor address only in issuer-only mode
+    function applyMode() {
+      holderAddressWrap.style.display = mode.value === 'issuer-only' ? 'block' : 'none';
+      if (mode.value !== 'issuer-only') {
+        document.getElementById('holderAddress').value = '';
+      }
+    }
+    mode.addEventListener('change', applyMode);
+    applyMode();
+
+    // Helpers
+    const CLASSIC_ADDR = /^r[1-9A-HJ-NP-Za-km-z]{25,34}$/;
+    const clean = s => (s ?? '').trim().replace(/\u200B/g,'');
+
+    resetBtn.addEventListener('click', () => {
+      form.reset();
+      applyMode();
+      issuerAddrEl.textContent = '—';
+      banner.className = 'banner';
+      banner.textContent = '';
+      output.textContent = '(waiting)';
+    });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      banner.className = 'banner';
+      banner.textContent = '';
+      output.textContent = 'Submitting…';
       submitBtn.disabled = true;
-      bannerSet('Submitting…');
 
-      const issuerOnly = modeSel.value === 'issuer-only';
       const data = {
-        issuerSecret: seedEl.value,
-        holderSecret: issuerOnly ? undefined : $('#holderSecret').value || undefined,
-        investorAddress: issuerOnly ? clean($('#holderAddress').value) : undefined,
-        currencyCode: $('#currencyCode').value,
-        amount: $('#amount').value,
-        limit: $('#limit').value || undefined,
-        freeze: $('#freeze').value === 'true',
-        network: $('#network').value,
-        verbose: $('#verbose').value === 'true'
+        issuerSecret: clean(form.issuerSecret.value),
+        currencyCode: clean(form.currencyCode.value),
+        amount: clean(form.amount.value),
+        freeze: form.freeze.value === 'true',
+        network: form.network.value,
+        verbose: form.verbose.value === 'true'
       };
+
+      if (mode.value === 'issuer-only') {
+        const addr = clean(document.getElementById('holderAddress').value);
+        if (!addr || !CLASSIC_ADDR.test(addr)) {
+          banner.className = 'banner err';
+          banner.textContent = 'Investor address format looks invalid.';
+          output.textContent = '(address pattern mismatch)';
+          submitBtn.disabled = false;
+          return;
+        }
+        data.investorAddress = addr;
+      }
 
       try {
         const res = await fetch('/api/xrpl/execute', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
         });
-        const text = await res.text();
+        const txt = await res.text();
         const isJSON = (res.headers.get('content-type') || '').includes('application/json');
-        const out = isJSON ? JSON.stringify(JSON.parse(text), null, 2) : text;
+        const payload = isJSON ? JSON.parse(txt || '{}') : txt;
+
         if (!res.ok) {
-          bannerSet(`HTTP ${res.status} ${res.statusText}\n\n${out}`, true);
-        } else {
-          bannerSet(out, false);
+          banner.className = 'banner err';
+          banner.textContent = `HTTP ${res.status} ${res.statusText}`;
+          output.textContent = typeof payload === 'string' ? txt : JSON.stringify(payload, null, 2);
+          return;
         }
-      } catch(err){
-        bannerSet('Network error: ' + (err?.message || err), true);
+        banner.className = 'banner ok';
+        banner.textContent = 'Success';
+        output.textContent = typeof payload === 'string' ? txt : JSON.stringify(payload, null, 2);
+      } catch (err) {
+        banner.className = 'banner err';
+        banner.textContent = 'Network error';
+        output.textContent = String(err && err.message || err);
       } finally {
         submitBtn.disabled = false;
       }
-    });
-
-    // Reset
-    $('#resetBtn').addEventListener('click', () => {
-      form.reset();
-      applyMode();
-      updateSeedPreview();
-      bannerSet('(waiting)');
     });
   </script>
 </body>
