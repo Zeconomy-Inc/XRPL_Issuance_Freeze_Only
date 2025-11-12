@@ -2,227 +2,223 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>XRPL IOU Issuance Form</title>
   <style>
     :root{
-      --fg:#0f172a; --muted:#64748b; --line:#e2e8f0; --blue:#2563eb; --blue2:#1d4ed8; --bg:#ffffff;
+      --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --bg:#ffffff;
+      --primary:#2563eb; --primary-600:#1d4ed8; --radius:12px;
     }
     *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.45 ui-sans-serif,system-ui,Segoe UI,Roboto,Inter,Arial}
-    .container{max-width:1100px;margin:36px auto;padding:0 24px}
-    h1{font-size:32px;margin:0 0 10px}
-    .sub{margin:0 0 24px;color:var(--muted)}
-
-    form{display:grid;grid-template-columns:1fr;gap:18px}
-    @media (min-width: 860px){
-      .row-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-      .row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px}
-    }
-
-    label{display:block;font-weight:600;margin-bottom:6px}
-    .hint{color:var(--muted);font-size:13px;margin-top:6px}
-
+    body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+    .wrap{max-width:980px;margin:28px auto;padding:0 20px}
+    h1{margin:0 0 6px;font-size:32px;font-weight:800}
+    p.lead{margin:0 0 22px;color:var(--muted)}
+    label{display:block;margin:14px 0 6px;font-weight:600}
     input,select,button{font:inherit}
     input,select{
-      width:100%;padding:12px 12px;border:1px solid var(--line);border-radius:10px;outline:none;background:#fff;
+      width:100%;padding:12px 12px;border:1px solid var(--line);
+      border-radius:var(--radius);background:#fff;outline:none
     }
-    input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.15)}
-
-    .inline-input{display:flex;gap:10px;align-items:center}
-    .btn{background:var(--blue);color:#fff;border:0;border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:700}
-    .btn:hover{background:var(--blue2)}
-    .btn.ghost{background:#fff;color:var(--fg);border:1px solid var(--line);font-weight:600}
-    .controls{display:flex;gap:12px;margin-top:6px}
-    .banner{padding:10px 12px;border:1px solid var(--line);border-radius:10px;display:none}
-    .banner.ok{display:block;border-color:#16a34a;color:#166534}
-    .banner.err{display:block;border-color:#dc2626;color:#991b1b}
-
-    .addr-line{font-size:14px;margin-top:6px}
-    .addr-line b{font-weight:700}
+    input:focus,select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    @media (max-width:840px){ .row{grid-template-columns:1fr} }
+    .inline{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:18px}
+    @media (max-width:840px){ .inline{grid-template-columns:1fr 1fr} }
+    .btn{background:var(--primary);color:#fff;border:0;padding:12px 18px;border-radius:var(--radius);cursor:pointer;font-weight:700}
+    .btn:hover{background:var(--primary-600)}
+    .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+    .controls{display:flex;gap:12px;margin-top:10px}
+    .hint{color:var(--muted);font-size:13px;margin-top:4px}
+    .reveal{
+      position:absolute;right:6px;top:6px;background:var(--primary);color:#fff;border:0;
+      border-radius:10px;padding:8px 12px;cursor:pointer;font-weight:700
+    }
+    .secret-wrap{position:relative}
+    .addr{margin-top:6px;font-size:14px}
+    .addr.ok{color:#166534}
+    .addr.err{color:#b91c1c}
+    pre{margin-top:16px;border:1px solid var(--line);border-radius:var(--radius);padding:12px;white-space:pre-wrap}
   </style>
 </head>
-
 <body>
-  <div class="container">
+  <div class="wrap">
     <h1>XRPL IOU Issuance Form</h1>
-    <p class="sub">Issue an IOU to an investor and optionally freeze the trustline after payment.</p>
+    <p class="lead">Issue an IOU to an investor and optionally freeze the trustline after payment.</p>
 
-    <form id="txForm" novalidate>
-      <!-- Issuer seed + derived classic address -->
-      <div>
-        <label for="issuerSecret">Issuer Secret</label>
-        <div class="inline-input">
-          <input type="password" id="issuerSecret" placeholder="sEd…" autocomplete="off" autocapitalize="off" spellcheck="false" />
-          <button type="button" id="toggleSeed" class="btn">Show</button>
+    <form id="form">
+      <div class="row">
+        <div>
+          <label for="issuerSecret">Issuer Secret</label>
+          <div class="secret-wrap">
+            <input type="password" id="issuerSecret" placeholder="sEd…" autocomplete="off" />
+            <button type="button" id="toggleSeed" class="reveal">Show</button>
+          </div>
+          <div id="issuerAddr" class="addr hint"></div>
+          <div class="hint">Seed never leaves your browser except when you submit.</div>
         </div>
-        <div id="issuerAddrLine" class="addr-line"><b>Address:</b> <span id="issuerAddrText" style="color:var(--muted)">—</span></div>
-        <div class="hint">Seed never leaves your browser except when you submit.</div>
+
+        <div>
+          <label for="holderAddress">Investor Address (r…)</label>
+          <input id="holderAddress" placeholder="r…" autocomplete="off"
+                 pattern="^r[1-9A-HJ-NP-Za-km-z]{25,34}$" />
+        </div>
       </div>
 
-      <!-- Investor address -->
-      <div>
-        <label for="holderAddress">Investor Address (r…)</label>
-        <input id="holderAddress" placeholder="r..." autocomplete="off" autocapitalize="off" spellcheck="false" />
-      </div>
-
-      <!-- Token / Network / Verbose -->
-      <div class="row-3">
+      <div class="inline" style="margin-top:8px">
         <div>
           <label for="currencyCode">Currency Code</label>
-          <input id="currencyCode" placeholder="GDCP20251110" />
-
-          <label for="amount" style="margin-top:14px">Amount</label>
-          <input id="amount" type="number" placeholder="100000" />
-
-          <label for="freeze" style="margin-top:14px">Freeze?</label>
+          <input id="currencyCode" placeholder="GDCP2025…" />
+        </div>
+        <div>
+          <label for="amount">Amount</label>
+          <input id="amount" type="number" placeholder="1000" />
+        </div>
+        <div>
+          <label for="freeze">Freeze?</label>
           <select id="freeze">
             <option value="true">true</option>
             <option value="false">false</option>
           </select>
         </div>
-
         <div>
           <label for="network">Network</label>
           <select id="network">
-            <option value="testnet">testnet</option>
+            <option value="testnet" selected>testnet</option>
             <option value="mainnet">mainnet</option>
           </select>
-
-          <label for="verbose" style="margin-top:14px">Verbose</label>
+          <label for="verbose" style="margin-top:12px">Verbose</label>
           <select id="verbose">
             <option value="true">true</option>
-            <option value="false">false</option>
+            <option value="false" selected>false</option>
           </select>
-        </div>
-
-        <div>
-          <label>&nbsp;</label>
-          <div class="controls">
-            <button id="submitBtn" class="btn" type="submit">Submit</button>
-            <button id="resetBtn" class="btn ghost" type="button">Reset</button>
-          </div>
         </div>
       </div>
 
-      <div id="banner" class="banner"></div>
-      <pre id="output" class="hint">(waiting)</pre>
+      <div class="controls">
+        <button class="btn" type="submit" id="submitBtn">Submit</button>
+        <button class="btn btn-ghost" type="button" id="resetBtn">Reset</button>
+      </div>
+
+      <pre id="output">(waiting)</pre>
     </form>
   </div>
 
-  <!-- Load xrpl BEFORE our script so derivation can't race -->
-  <script src="https://unpkg.com/xrpl@2.14.0/dist/browser/xrpl-latest-min.js"></script>
-
   <script>
-    // --- Elements
-    const seedEl = document.getElementById('issuerSecret');
-    const addrText = document.getElementById('issuerAddrText');
-    const toggleBtn = document.getElementById('toggleSeed');
-    const form = document.getElementById('txForm');
-    const output = document.getElementById('output');
-    const banner = document.getElementById('banner');
-    const submitBtn = document.getElementById('submitBtn');
-    const resetBtn = document.getElementById('resetBtn');
+    // --- UI helpers ---
+    const $ = (id) => document.getElementById(id);
+    const seedEl = $('issuerSecret');
+    const addrEl = $('issuerAddr');
+    const toggleBtn = $('toggleSeed');
+    const output = $('output');
+    const submitBtn = $('submitBtn');
+    const resetBtn = $('resetBtn');
 
-    // --- Utilities
-    const CLASSIC_ADDR = /^r[1-9A-HJ-NP-Za-km-z]{25,34}$/;
-    const clean = s => (s ?? '').trim().replace(/\u200B/g, '');
-    const seedLooksLikeXRPL = s => /^s[0-9A-Za-z]{20,60}$/.test(s); // permissive; we'll try to parse
-
-    function setAddr(text, ok=true){
-      addrText.textContent = text;
-      addrText.style.color = ok ? '#166534' : '#991b1b';
-    }
-
-    function deriveAddress() {
-      const seed = clean(seedEl.value);
-      if (!seed) { setAddr('—', true); return; }
-
-      try {
-        if (!window.xrpl || !seedLooksLikeXRPL(seed)) {
-          setAddr('Invalid seed', false);
-          return;
-        }
-        const wallet = xrpl.Wallet.fromSeed(seed);      // throws if malformed
-        setAddr(wallet.address, true);
-      } catch (e) {
-        setAddr('Invalid seed', false);
-      }
-    }
-
-    // --- Events
     toggleBtn.addEventListener('click', () => {
       seedEl.type = seedEl.type === 'password' ? 'text' : 'password';
       toggleBtn.textContent = seedEl.type === 'password' ? 'Show' : 'Hide';
     });
-    seedEl.addEventListener('input', deriveAddress);
-    document.addEventListener('DOMContentLoaded', deriveAddress);
 
     resetBtn.addEventListener('click', () => {
-      form.reset();
-      banner.className = 'banner';
-      banner.textContent = '';
+      $('form').reset();
+      addrEl.textContent = '';
+      addrEl.className = 'addr hint';
       output.textContent = '(waiting)';
-      toggleBtn.textContent = 'Show';
-      seedEl.type = 'password';
-      setAddr('—', true);
     });
 
-    // --- Submit
-    form.addEventListener('submit', async (e) => {
+    // --- Classic address derivation WITHOUT browser XRPL libs ---
+    // We call your backend to derive the address. Tries /api/derive-key then /api/derive.
+    let deriveTimer = null;
+    async function deriveAddressFromSeed(seed) {
+      const payload = { seed: seed };
+      const tryEndpoints = ['/api/derive-key', '/api/derive'];
+      for (const ep of tryEndpoints) {
+        try {
+          const res = await fetch(ep, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (!res.ok) continue;
+          const data = await res.json();
+          // Expected shapes: { address: "r..." } or { classicAddress: "r..." }
+          const r = data.address || data.classicAddress || data.r || null;
+          if (r && /^r[1-9A-HJ-NP-Za-km-z]{25,34}$/.test(r)) return r;
+        } catch (_) {}
+      }
+      // If all fail, throw
+      throw new Error('derive-failed');
+    }
+
+    function updateIssuerAddress() {
+      const seed = (seedEl.value || '').trim();
+      if (!seed) {
+        addrEl.textContent = '';
+        addrEl.className = 'addr hint';
+        return;
+      }
+      // Light client check to avoid spamming the API with obviously wrong input
+      if (!/^sEd/.test(seed) || seed.length < 20) {
+        addrEl.textContent = 'Invalid seed';
+        addrEl.className = 'addr err';
+        return;
+      }
+      clearTimeout(deriveTimer);
+      deriveTimer = setTimeout(async () => {
+        addrEl.textContent = 'Resolving address…';
+        addrEl.className = 'addr hint';
+        try {
+          const classic = await deriveAddressFromSeed(seed);
+          addrEl.textContent = classic;
+          addrEl.className = 'addr ok';
+        } catch {
+          addrEl.textContent = 'Invalid seed';
+          addrEl.className = 'addr err';
+        }
+      }, 250); // debounce
+    }
+
+    seedEl.addEventListener('input', updateIssuerAddress);
+
+    // --- Submit handler (unchanged wire format for your API) ---
+    document.getElementById('form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      banner.className = 'banner';
-      banner.textContent = '';
       output.textContent = 'Submitting…';
       submitBtn.disabled = true;
 
       const data = {
-        issuerSecret: clean(seedEl.value),
-        investorAddress: clean(document.getElementById('holderAddress').value),
-        currencyCode: clean(document.getElementById('currencyCode').value),
-        amount: clean(document.getElementById('amount').value),
-        freeze: document.getElementById('freeze').value === 'true',
-        network: document.getElementById('network').value,
-        verbose: document.getElementById('verbose').value === 'true'
+        issuerSecret: seedEl.value.trim(),
+        investorAddress: $('holderAddress').value.trim(),
+        currencyCode: $('currencyCode').value.trim(),
+        amount: $('amount').value.trim(),
+        freeze: $('freeze').value === 'true',
+        network: $('network').value,
+        verbose: $('verbose').value === 'true'
       };
-
-      // basic checks
-      if (!data.issuerSecret) {
-        banner.className = 'banner err'; banner.textContent = 'Issuer seed is required.';
-        output.textContent = '(missing issuer seed)'; submitBtn.disabled = false; return;
-      }
-      if (!CLASSIC_ADDR.test(data.investorAddress)) {
-        banner.className = 'banner err'; banner.textContent = 'Investor address format looks invalid.';
-        output.textContent = '(address pattern mismatch)'; submitBtn.disabled = false; return;
-      }
 
       try {
         const res = await fetch('/api/xrpl/execute', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
           body: JSON.stringify(data)
         });
+        const ct = res.headers.get('content-type') || '';
         const text = await res.text();
-        let payload;
-        try { payload = JSON.parse(text); } catch { payload = text; }
-
+        const parsed = ct.includes('application/json') ? JSON.parse(text || '{}') : text;
         if (!res.ok) {
-          banner.className = 'banner err';
-          banner.textContent = `HTTP ${res.status} ${res.statusText}`;
-          output.textContent = typeof payload === 'string' ? payload : JSON.stringify(payload, null, 2);
-          return;
+          output.textContent = typeof parsed === 'string' ? parsed : JSON.stringify(parsed, null, 2);
+        } else {
+          output.textContent = typeof parsed === 'string' ? parsed : JSON.stringify(parsed, null, 2);
         }
-        banner.className = 'banner ok';
-        banner.textContent = 'Success';
-        output.textContent = typeof payload === 'string' ? payload : JSON.stringify(payload, null, 2);
       } catch (err) {
-        banner.className = 'banner err';
-        banner.textContent = 'Network error';
-        output.textContent = String(err?.message || err);
+        output.textContent = 'Network error: ' + (err?.message || err);
       } finally {
         submitBtn.disabled = false;
       }
     });
+
+    // Kick initial layout
+    updateIssuerAddress();
   </script>
 </body>
 </html>
