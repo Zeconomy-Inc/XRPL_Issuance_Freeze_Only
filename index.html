@@ -6,262 +6,227 @@
   <title>XRPL IOU Issuance Form</title>
   <style>
     :root{
-      --bg:#ffffff; --ink:#0e1726; --muted:#6b7a90; --line:#e6ecf3;
-      --primary:#3366ff; --primary-2:#2754db; --ok:#12b886; --err:#e03131;
-      --field:#f7f9fc;
+      --ink:#0b1220; --muted:#516070; --line:#dbe2ea; --accent:#2e65ff; --accent-2:#1e4fe0;
+      --bg:#ffffff; --field:#f6f8fb; --field-border:#cfd8e3; --ok:#0c8f55; --err:#cc2c3a;
+      --radius:12px;
     }
     *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
-    .container{max-width:1080px;margin:36px auto;padding:0 20px}
-    h1{margin:0 0 8px;font-size:40px;font-weight:800;letter-spacing:-0.02em}
-    p.lead{margin:0 0 28px;color:var(--muted)}
-
-    /* form */
-    form{display:grid;gap:18px}
-    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
-    .span-12{grid-column:span 12}
-    .span-6{grid-column:span 6}
-    .span-4{grid-column:span 4}
-    .span-3{grid-column:span 3}
-    @media (max-width:900px){
-      .span-6,.span-4,.span-3{grid-column:span 12}
-    }
-
-    label{display:block;font-size:14px;font-weight:600;margin:2px 0 6px}
-    .hint{font-size:12px;color:var(--muted);margin-top:6px}
-
-    input,select,button{
-      font:inherit;color:inherit
-    }
-    input,select{
-      width:100%;padding:12px 12px;border:1px solid var(--line);
-      border-radius:12px;background:var(--field);outline:none
-    }
-    input:focus,select:focus{border-color:var(--primary);box-shadow:0 0 0 4px rgba(51,102,255,.15)}
-    .addr{color:#117a37}
-
-    .row-inline{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
-    .row-inline > .cell{grid-column:span 2}
-    .row-inline > .cell.w3{grid-column:span 3}
-    .row-inline > .cell.w4{grid-column:span 4}
-    @media (max-width:900px){
-      .row-inline > .cell,.row-inline > .cell.w3,.row-inline > .cell.w4{grid-column:span 12}
-    }
-
-    .controls{display:flex;gap:12px;margin-top:4px}
-    .btn{
-      display:inline-flex;align-items:center;justify-content:center;
-      padding:12px 18px;border-radius:12px;border:1px solid transparent;
-      font-weight:700;cursor:pointer
-    }
-    .btn-primary{background:var(--primary);color:#fff}
-    .btn-primary:hover{background:var(--primary-2)}
-    .btn-ghost{background:#fff;border-color:var(--line)}
-    .reveal{
-      position:absolute;right:6px;top:34px
-    }
-    .field-wrap{position:relative}
-    .banner{padding:10px 12px;border-radius:12px;border:1px solid var(--line);display:none}
-    .banner.ok{display:block;border-color:#1ea672;color:#0f7a49}
-    .banner.err{display:block;border-color:#d64545;color:#a11d1d}
-    pre{background:#fafcff;border:1px solid var(--line);border-radius:12px;padding:12px;overflow:auto}
+    body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+    .wrap{max-width:1200px;margin:28px auto;padding:0 24px}
+    h1{font-size:40px;margin:0 0 8px}
+    .sub{color:var(--muted);margin:0 0 28px}
+    /* layout */
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:0 0 18px}
+    .row{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+    .col-6{grid-column:span 6}
+    .col-4{grid-column:span 4}
+    .col-3{grid-column:span 3}
+    .col-12{grid-column:1 / -1}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}.col-6,.col-4,.col-3{grid-column:1 / -1}}
+    /* fields */
+    label{display:block;margin:12px 0 6px;font-weight:600}
+    input,select{width:100%;padding:12px 14px;border:1px solid var(--field-border);border-radius:var(--radius);background:#fff;color:var(--ink);outline:none}
+    input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(46,101,255,.14)}
+    .hint{font-size:13px;color:var(--muted);margin-top:6px}
+    .inline{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+    .btn{background:var(--accent);color:#fff;border:0;border-radius:12px;padding:12px 18px;font-weight:700;cursor:pointer}
+    .btn:hover{background:var(--accent-2)}
+    .btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+    .showbtn{position:absolute;right:6px;top:6px}
+    .secret-wrap{position:relative}
+    /* status */
+    .kv{font-size:14px;margin-top:6px}
+    .kv b{margin-right:6px}
+    .ok{color:var(--ok)}
+    .err{color:var(--err)}
+    pre{background:#f7f9fc;border:1px solid var(--line);border-radius:12px;padding:10px;overflow:auto}
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="wrap">
     <h1>XRPL IOU Issuance Form</h1>
-    <p class="lead">Issue an IOU to an investor and optionally freeze the trustline after payment.</p>
+    <p class="sub">Issue an IOU to an investor and optionally freeze the trustline after payment.</p>
 
     <form id="txForm" novalidate>
-      <!-- Top row: seed, mode, investor address -->
-      <div class="grid">
-        <div class="span-6 field-wrap">
+      <!-- top row: issuer seed, mode, investor address -->
+      <div class="row">
+        <div class="col-6">
           <label for="issuerSecret">Issuer Secret</label>
-          <input type="password" id="issuerSecret" name="issuerSecret" placeholder="sEd…" autocomplete="off" />
-          <button type="button" class="btn btn-primary reveal" data-toggle="issuerSecret">Show</button>
-          <div class="hint">Address: <span id="issuerAddr" class="addr">—</span></div>
+          <div class="secret-wrap">
+            <input type="password" id="issuerSecret" placeholder="sEd…" autocomplete="off" />
+            <button type="button" id="toggleIssuer" class="btn showbtn">Show</button>
+          </div>
+          <div class="kv" id="issuerAddressRow"><b>Address:</b> <span id="issuerAddressTxt" class="err">Invalid seed</span></div>
           <div class="hint">Seed never leaves your browser except when you submit.</div>
         </div>
 
-        <div class="span-3">
+        <div class="col-3">
           <label for="mode">Mode</label>
-          <select id="mode" name="mode">
-            <option value="issuer-only" selected>Issuer seed + investor address (issue & freeze)</option>
+          <select id="mode">
+            <option value="issuer-only" selected>Issuer seed + investor address (issue &amp; freeze)</option>
             <option value="both">Both seeds (full flow)</option>
           </select>
         </div>
 
-        <div class="span-3" id="holderAddressWrap">
+        <div class="col-3" id="holderAddressWrap">
           <label for="holderAddress">Investor Address (r…)</label>
-          <input type="text" id="holderAddress" name="holderAddress" placeholder="r..." autocomplete="off"
-                 autocapitalize="off" autocorrect="off" spellcheck="false"
-                 pattern="^r[1-9A-HJ-NP-Za-km-z]{25,34}$" />
-          <div class="hint">Use either Investor Secret (classic) or Investor Address (issuer-only with existing trustline).</div>
+          <input type="text" id="holderAddress" placeholder="r..." autocomplete="off" autocapitalize="off" spellcheck="false" />
+          <div class="hint">Use either Investor Secret (classic flow) or Investor Address (issuer-only with existing trustline).</div>
         </div>
       </div>
 
-      <!-- Single compact row: token + network -->
-      <div class="row-inline">
-        <div class="cell w3">
-          <label for="currencyCode">Currency Code</label>
-          <input type="text" id="currencyCode" name="currencyCode" placeholder="GDCP20251110" />
+      <!-- compact row: Token & Trustline + Network -->
+      <div class="grid">
+        <div>
+          <div class="row">
+            <div class="col-4">
+              <label for="currencyCode">Currency Code</label>
+              <input id="currencyCode" placeholder="GDCP20251110" />
+            </div>
+            <div class="col-3">
+              <label for="amount">Amount</label>
+              <input id="amount" type="number" placeholder="100000" />
+            </div>
+            <div class="col-3">
+              <label for="freeze">Freeze after payment?</label>
+              <select id="freeze">
+                <option value="true">true</option>
+                <option value="false">false</option>
+              </select>
+            </div>
+          </div>
         </div>
-        <div class="cell w3">
-          <label for="amount">Amount</label>
-          <input type="number" id="amount" name="amount" placeholder="100000" />
-        </div>
-        <div class="cell w3">
-          <label for="freeze">Freeze after payment?</label>
-          <select id="freeze" name="freeze">
-            <option value="true">true</option>
-            <option value="false">false</option>
-          </select>
-        </div>
-        <div class="cell w3">
-          <label for="network">Network</label>
-          <select id="network" name="network">
-            <option value="testnet">testnet</option>
-            <option value="mainnet1">mainnet1</option>
-            <option value="mainnet2">mainnet2</option>
-          </select>
-        </div>
-        <div class="cell w3">
-          <label for="verbose">Verbose</label>
-          <select id="verbose" name="verbose">
-            <option value="true">true</option>
-            <option value="false" selected>false</option>
-          </select>
+
+        <div>
+          <div class="row">
+            <div class="col-4">
+              <label for="network">Network</label>
+              <select id="network">
+                <option value="testnet" selected>testnet</option>
+                <option value="mainnet1">mainnet1</option>
+                <option value="mainnet2">mainnet2</option>
+              </select>
+            </div>
+            <div class="col-3">
+              <label for="verbose">Verbose</label>
+              <select id="verbose">
+                <option value="false" selected>false</option>
+                <option value="true">true</option>
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="controls">
-        <button id="submitBtn" type="submit" class="btn btn-primary">Submit</button>
-        <button id="resetBtn" type="button" class="btn btn-ghost">Reset</button>
+      <div class="inline" style="margin:10px 0 16px">
+        <button class="btn" id="submitBtn" type="submit">Submit</button>
+        <button class="btn ghost" id="resetBtn" type="button">Reset</button>
       </div>
 
-      <div id="banner" class="banner"></div>
       <pre id="output">(waiting)</pre>
     </form>
   </div>
 
-  <!-- XRPL browser library for seed→address derivation -->
-  <script src="https://unpkg.com/xrpl@2.14.0/dist/browser/xrpl-latest-min.js"></script>
-
   <script>
-    // Elements
-    const form = document.getElementById('txForm');
-    const output = document.getElementById('output');
-    const banner = document.getElementById('banner');
-    const submitBtn = document.getElementById('submitBtn');
-    const resetBtn = document.getElementById('resetBtn');
-    const mode = document.getElementById('mode');
-    const holderAddressWrap = document.getElementById('holderAddressWrap');
-    const issuerSecretEl = document.getElementById('issuerSecret');
-    const issuerAddrEl = document.getElementById('issuerAddr');
+    // --- UI helpers ---
+    const $ = (q) => document.querySelector(q);
+    const issuerSecretEl = $('#issuerSecret');
+    const issuerAddrRow  = $('#issuerAddressRow');
+    const issuerAddrTxt  = $('#issuerAddressTxt');
+    const toggleIssuer   = $('#toggleIssuer');
 
-    // Show/Hide seed button (blue by default)
-    document.querySelectorAll('.reveal').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const id = btn.getAttribute('data-toggle');
-        const input = document.getElementById(id);
-        const type = input.type === 'password' ? 'text' : 'password';
-        input.type = type;
-        btn.textContent = type === 'password' ? 'Show' : 'Hide';
-      });
+    // Show/Hide seed
+    toggleIssuer.addEventListener('click', () => {
+      issuerSecretEl.type = issuerSecretEl.type === 'password' ? 'text' : 'password';
+      toggleIssuer.textContent = issuerSecretEl.type === 'password' ? 'Show' : 'Hide';
     });
 
-    // Derive classic address from seed
-    function updateIssuerAddress() {
-      const seed = (issuerSecretEl.value || '').trim();
-      if (!seed) {
-        issuerAddrEl.textContent = '—';
-        return;
-      }
-      try {
-        const wallet = xrpl.Wallet.fromSeed(seed);
-        issuerAddrEl.textContent = wallet.classicAddress;
-      } catch (_) {
-        issuerAddrEl.textContent = 'Invalid seed';
+    // Debounce
+    function debounce(fn, ms){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; }
+
+    // Derive classic address on the server to avoid client lib issues
+    async function deriveClassic(seed){
+      const s = (seed||'').trim();
+      if (!s) return { ok:false, reason:'empty' };
+      try{
+        const r = await fetch('/api/derive-key', {
+          method:'POST',
+          headers:{'content-type':'application/json'},
+          body: JSON.stringify({ seed:s })
+        });
+        if(!r.ok){
+          const t = await r.text().catch(()=> '');
+          return { ok:false, reason:`HTTP ${r.status}`, details:t };
+        }
+        const j = await r.json();
+        if (j && j.address && /^r[1-9A-HJ-NP-Za-km-z]{25,34}$/.test(j.address)) {
+          return { ok:true, address:j.address };
+        }
+        return { ok:false, reason:'bad_response' };
+      }catch(e){
+        return { ok:false, reason:String(e && e.message || e) };
       }
     }
-    issuerSecretEl.addEventListener('input', updateIssuerAddress);
-    document.addEventListener('DOMContentLoaded', updateIssuerAddress);
 
-    // Mode switch: show investor address only in issuer-only mode
-    function applyMode() {
-      holderAddressWrap.style.display = mode.value === 'issuer-only' ? 'block' : 'none';
-      if (mode.value !== 'issuer-only') {
-        document.getElementById('holderAddress').value = '';
+    const updateDerived = debounce(async () => {
+      const seed = issuerSecretEl.value;
+      issuerAddrTxt.textContent = 'Deriving…';
+      issuerAddrTxt.className = '';
+      const r = await deriveClassic(seed);
+      if (r.ok){
+        issuerAddrTxt.textContent = r.address;
+        issuerAddrTxt.className = 'ok';
+      } else {
+        issuerAddrTxt.textContent = 'Invalid seed';
+        issuerAddrTxt.className = 'err';
       }
-    }
-    mode.addEventListener('change', applyMode);
-    applyMode();
+    }, 250);
 
-    // Helpers
-    const CLASSIC_ADDR = /^r[1-9A-HJ-NP-Za-km-z]{25,34}$/;
-    const clean = s => (s ?? '').trim().replace(/\u200B/g,'');
+    issuerSecretEl.addEventListener('input', updateDerived);
+    document.addEventListener('DOMContentLoaded', updateDerived);
+
+    // --- Form submission (unchanged flow) ---
+    const form = document.getElementById('txForm');
+    const output = document.getElementById('output');
+    const submitBtn = document.getElementById('submitBtn');
+    const resetBtn = document.getElementById('resetBtn');
 
     resetBtn.addEventListener('click', () => {
       form.reset();
-      applyMode();
-      issuerAddrEl.textContent = '—';
-      banner.className = 'banner';
-      banner.textContent = '';
+      issuerAddrTxt.textContent = 'Invalid seed';
+      issuerAddrTxt.className = 'err';
       output.textContent = '(waiting)';
+      toggleIssuer.textContent = 'Show';
+      issuerSecretEl.type = 'password';
     });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      banner.className = 'banner';
-      banner.textContent = '';
-      output.textContent = 'Submitting…';
       submitBtn.disabled = true;
+      output.textContent = 'Submitting…';
 
       const data = {
-        issuerSecret: clean(form.issuerSecret.value),
-        currencyCode: clean(form.currencyCode.value),
-        amount: clean(form.amount.value),
-        freeze: form.freeze.value === 'true',
-        network: form.network.value,
-        verbose: form.verbose.value === 'true'
+        issuerSecret: issuerSecretEl.value,
+        investorAddress: document.getElementById('holderAddress').value.trim(),
+        currencyCode: document.getElementById('currencyCode').value.trim(),
+        amount: document.getElementById('amount').value.trim(),
+        freeze: document.getElementById('freeze').value === 'true',
+        network: document.getElementById('network').value,
+        verbose: document.getElementById('verbose').value === 'true'
       };
 
-      if (mode.value === 'issuer-only') {
-        const addr = clean(document.getElementById('holderAddress').value);
-        if (!addr || !CLASSIC_ADDR.test(addr)) {
-          banner.className = 'banner err';
-          banner.textContent = 'Investor address format looks invalid.';
-          output.textContent = '(address pattern mismatch)';
-          submitBtn.disabled = false;
-          return;
-        }
-        data.investorAddress = addr;
-      }
-
-      try {
+      try{
         const res = await fetch('/api/xrpl/execute', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method:'POST',
+          headers:{'content-type':'application/json'},
           body: JSON.stringify(data)
         });
         const txt = await res.text();
-        const isJSON = (res.headers.get('content-type') || '').includes('application/json');
-        const payload = isJSON ? JSON.parse(txt || '{}') : txt;
-
-        if (!res.ok) {
-          banner.className = 'banner err';
-          banner.textContent = `HTTP ${res.status} ${res.statusText}`;
-          output.textContent = typeof payload === 'string' ? txt : JSON.stringify(payload, null, 2);
-          return;
-        }
-        banner.className = 'banner ok';
-        banner.textContent = 'Success';
-        output.textContent = typeof payload === 'string' ? txt : JSON.stringify(payload, null, 2);
-      } catch (err) {
-        banner.className = 'banner err';
-        banner.textContent = 'Network error';
-        output.textContent = String(err && err.message || err);
-      } finally {
+        const isJSON = (res.headers.get('content-type')||'').includes('application/json');
+        output.textContent = isJSON ? JSON.stringify(JSON.parse(txt), null, 2) : txt;
+      }catch(err){
+        output.textContent = 'Network/Fetch error: ' + (err?.message || err);
+      }finally{
         submitBtn.disabled = false;
       }
     });
