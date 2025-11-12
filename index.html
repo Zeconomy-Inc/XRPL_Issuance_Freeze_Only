@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>XRPL IOU Issuance Form</title>
+  <title>XRPL - GDCP Issuance</title>
   <style>
     :root{
       --ink:#0b1220; --muted:#516070; --line:#dbe2ea; --accent:#2e65ff; --accent-2:#1e4fe0;
@@ -42,194 +42,81 @@
     pre{background:#f7f9fc;border:1px solid var(--line);border-radius:12px;padding:10px;overflow:auto}
   </style>
 </head>
-<body>
-  <div class="wrap">
-    <h1>XRPL IOU Issuance Form</h1>
-    <p class="sub">Issue an IOU to an investor and optionally freeze the trustline after payment.</p>
+<body class="bg-white text-gray-800">
+  <main class="max-w-6xl mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-2">XRPL IOU Issuance Form</h1>
+    <p class="text-gray-600 mb-8">
+      Issue an IOU to an investor and optionally freeze the trustline after payment.
+    </p>
 
-    <form id="txForm" novalidate>
-      <!-- top row: issuer seed, mode, investor address -->
-      <div class="row">
-        <div class="col-6">
-          <label for="issuerSecret">Issuer Secret</label>
-          <div class="secret-wrap">
-            <input type="password" id="issuerSecret" placeholder="sEd…" autocomplete="off" />
-            <button type="button" id="toggleIssuer" class="btn showbtn">Show</button>
-          </div>
-          <div class="kv" id="issuerAddressRow"><b>Address:</b> <span id="issuerAddressTxt" class="err">Invalid seed</span></div>
-          <div class="hint">Seed never leaves your browser except when you submit.</div>
+    <form id="xrplForm" class="space-y-6">
+      <!-- Issuer Section -->
+      <div>
+        <label for="issuerSecret" class="block text-lg font-semibold">Issuer Secret</label>
+        <div class="flex items-center space-x-2">
+          <input type="password" id="issuerSecret" name="issuerSecret" placeholder="sEd..." 
+                 class="flex-1 p-2 border rounded-md shadow-sm focus:outline-none focus:ring focus:ring-blue-300" />
+          <button type="button" id="toggleIssuerSecret"
+                  class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">Show</button>
         </div>
+        <p id="issuerAddress" class="text-sm mt-1 text-gray-700"></p>
+        <p class="text-sm text-gray-500 mt-1">Seed never leaves your browser except when you submit.</p>
+      </div>
 
-        <div class="col-3">
-          <label for="mode">Mode</label>
-          <select id="mode">
-            <option value="issuer-only" selected>Issuer seed + investor address (issue &amp; freeze)</option>
-            <option value="both">Both seeds (full flow)</option>
+      <!-- Investor Address -->
+      <div>
+        <label for="holderAddress" class="block text-lg font-semibold">Investor Address (r...)</label>
+        <input type="text" id="holderAddress" name="holderAddress" placeholder="r..." 
+               class="w-full p-2 border rounded-md shadow-sm focus:outline-none focus:ring focus:ring-blue-300" />
+      </div>
+
+      <!-- Token, Trustline, Network in one row -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div>
+          <label class="block text-lg font-semibold mb-2">Currency Code</label>
+          <input type="text" id="currencyCode" name="currencyCode" placeholder="GDCP..." 
+                 class="w-full p-2 border rounded-md" />
+
+          <label class="block text-lg font-semibold mt-4 mb-2">Amount</label>
+          <input type="number" id="amount" name="amount" placeholder="1000"
+                 class="w-full p-2 border rounded-md" />
+
+          <label class="block text-lg font-semibold mt-4 mb-2">Freeze?</label>
+          <select id="freeze" name="freeze" class="w-full p-2 border rounded-md">
+            <option value="true">true</option>
+            <option value="false">false</option>
           </select>
         </div>
 
-        <div class="col-3" id="holderAddressWrap">
-          <label for="holderAddress">Investor Address (r…)</label>
-          <input type="text" id="holderAddress" placeholder="r..." autocomplete="off" autocapitalize="off" spellcheck="false" />
-          <div class="hint">Use either Investor Secret (classic flow) or Investor Address (issuer-only with existing trustline).</div>
-        </div>
-      </div>
-
-      <!-- compact row: Token & Trustline + Network -->
-      <div class="grid">
         <div>
-          <div class="row">
-            <div class="col-4">
-              <label for="currencyCode">Currency Code</label>
-              <input id="currencyCode" placeholder="GDCP20251110" />
-            </div>
-            <div class="col-3">
-              <label for="amount">Amount</label>
-              <input id="amount" type="number" placeholder="100000" />
-            </div>
-            <div class="col-3">
-              <label for="freeze">Freeze after payment?</label>
-              <select id="freeze">
-                <option value="true">true</option>
-                <option value="false">false</option>
-              </select>
-            </div>
-          </div>
-        </div>
+          <label class="block text-lg font-semibold mb-2">Network</label>
+          <select id="network" name="network" class="w-full p-2 border rounded-md">
+            <option value="testnet">testnet</option>
+            <option value="mainnet">mainnet</option>
+          </select>
 
-        <div>
-          <div class="row">
-            <div class="col-4">
-              <label for="network">Network</label>
-              <select id="network">
-                <option value="testnet" selected>testnet</option>
-                <option value="mainnet1">mainnet1</option>
-                <option value="mainnet2">mainnet2</option>
-              </select>
-            </div>
-            <div class="col-3">
-              <label for="verbose">Verbose</label>
-              <select id="verbose">
-                <option value="false" selected>false</option>
-                <option value="true">true</option>
-              </select>
-            </div>
-          </div>
+          <label class="block text-lg font-semibold mt-4 mb-2">Verbose</label>
+          <select id="verbose" name="verbose" class="w-full p-2 border rounded-md">
+            <option value="true">true</option>
+            <option value="false">false</option>
+          </select>
         </div>
       </div>
 
-      <div class="inline" style="margin:10px 0 16px">
-        <button class="btn" id="submitBtn" type="submit">Submit</button>
-        <button class="btn ghost" id="resetBtn" type="button">Reset</button>
+      <!-- Buttons -->
+      <div class="flex space-x-4 pt-4">
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md">
+          Submit
+        </button>
+        <button type="reset" class="border border-gray-400 text-gray-800 px-6 py-2 rounded-md">
+          Reset
+        </button>
       </div>
 
-      <pre id="output">(waiting)</pre>
+      <!-- Output -->
+      <div id="output" class="mt-6 text-gray-700 text-sm whitespace-pre-wrap">(waiting)</div>
     </form>
-  </div>
-
-  <script>
-    // --- UI helpers ---
-    const $ = (q) => document.querySelector(q);
-    const issuerSecretEl = $('#issuerSecret');
-    const issuerAddrRow  = $('#issuerAddressRow');
-    const issuerAddrTxt  = $('#issuerAddressTxt');
-    const toggleIssuer   = $('#toggleIssuer');
-
-    // Show/Hide seed
-    toggleIssuer.addEventListener('click', () => {
-      issuerSecretEl.type = issuerSecretEl.type === 'password' ? 'text' : 'password';
-      toggleIssuer.textContent = issuerSecretEl.type === 'password' ? 'Show' : 'Hide';
-    });
-
-    // Debounce
-    function debounce(fn, ms){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; }
-
-    // Derive classic address on the server to avoid client lib issues
-    async function deriveClassic(seed){
-      const s = (seed||'').trim();
-      if (!s) return { ok:false, reason:'empty' };
-      try{
-        const r = await fetch('/api/derive-key', {
-          method:'POST',
-          headers:{'content-type':'application/json'},
-          body: JSON.stringify({ seed:s })
-        });
-        if(!r.ok){
-          const t = await r.text().catch(()=> '');
-          return { ok:false, reason:`HTTP ${r.status}`, details:t };
-        }
-        const j = await r.json();
-        if (j && j.address && /^r[1-9A-HJ-NP-Za-km-z]{25,34}$/.test(j.address)) {
-          return { ok:true, address:j.address };
-        }
-        return { ok:false, reason:'bad_response' };
-      }catch(e){
-        return { ok:false, reason:String(e && e.message || e) };
-      }
-    }
-
-    const updateDerived = debounce(async () => {
-      const seed = issuerSecretEl.value;
-      issuerAddrTxt.textContent = 'Deriving…';
-      issuerAddrTxt.className = '';
-      const r = await deriveClassic(seed);
-      if (r.ok){
-        issuerAddrTxt.textContent = r.address;
-        issuerAddrTxt.className = 'ok';
-      } else {
-        issuerAddrTxt.textContent = 'Invalid seed';
-        issuerAddrTxt.className = 'err';
-      }
-    }, 250);
-
-    issuerSecretEl.addEventListener('input', updateDerived);
-    document.addEventListener('DOMContentLoaded', updateDerived);
-
-    // --- Form submission (unchanged flow) ---
-    const form = document.getElementById('txForm');
-    const output = document.getElementById('output');
-    const submitBtn = document.getElementById('submitBtn');
-    const resetBtn = document.getElementById('resetBtn');
-
-    resetBtn.addEventListener('click', () => {
-      form.reset();
-      issuerAddrTxt.textContent = 'Invalid seed';
-      issuerAddrTxt.className = 'err';
-      output.textContent = '(waiting)';
-      toggleIssuer.textContent = 'Show';
-      issuerSecretEl.type = 'password';
-    });
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      submitBtn.disabled = true;
-      output.textContent = 'Submitting…';
-
-      const data = {
-        issuerSecret: issuerSecretEl.value,
-        investorAddress: document.getElementById('holderAddress').value.trim(),
-        currencyCode: document.getElementById('currencyCode').value.trim(),
-        amount: document.getElementById('amount').value.trim(),
-        freeze: document.getElementById('freeze').value === 'true',
-        network: document.getElementById('network').value,
-        verbose: document.getElementById('verbose').value === 'true'
-      };
-
-      try{
-        const res = await fetch('/api/xrpl/execute', {
-          method:'POST',
-          headers:{'content-type':'application/json'},
-          body: JSON.stringify(data)
-        });
-        const txt = await res.text();
-        const isJSON = (res.headers.get('content-type')||'').includes('application/json');
-        output.textContent = isJSON ? JSON.stringify(JSON.parse(txt), null, 2) : txt;
-      }catch(err){
-        output.textContent = 'Network/Fetch error: ' + (err?.message || err);
-      }finally{
-        submitBtn.disabled = false;
-      }
-    });
-  </script>
+  </main>
 </body>
+
 </html>
