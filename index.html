@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>XRPL IOU Issuance Form</title>
+  <title>XRPL - GDCP Issuance</title>
   <style>
     :root{
       --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --bg:#ffffff;
@@ -55,7 +55,7 @@
             <button type="button" id="toggleSeed" class="reveal">Show</button>
           </div>
           <div id="issuerAddr" class="addr hint"></div>
-          <div class="hint">Seed never leaves your browser except when you submit.</div>
+          <!--<div class="hint">Seed never leaves your browser except when you submit.</div>-->
         </div>
 
         <div>
@@ -85,7 +85,8 @@
           <label for="network">Network</label>
           <select id="network">
             <option value="testnet" selected>testnet</option>
-            <option value="mainnet">mainnet</option>
+            <option value="mainnet1">mainnet - XRPL Cluster</option>
+            <option value="mainnet2">mainnet - Quicknode</option>
           </select>
           <label for="verbose" style="margin-top:12px">Verbose</label>
           <select id="verbose">

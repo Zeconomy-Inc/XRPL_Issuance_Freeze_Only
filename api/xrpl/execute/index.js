@@ -78,11 +78,21 @@ module.exports = async (req, res) => {
     const currency = toXrplCurrency(currencyCode);
 
     // XRPL endpoints: prefer env, fall back to public
-    const server =
-      network === "mainnet"
-        ? process.env.XRPL_MAINNET_URL || "wss://xrplcluster.com"
-        : process.env.XRPL_TESTNET_URL || "wss://s.altnet.rippletest.net:51233";
-
+    //const server =
+    //  network === "mainnet"
+    //    ? process.env.XRPL_MAINNET_URL || "wss://xrplcluster.com"
+    //    : process.env.XRPL_TESTNET_URL || "wss://s.altnet.rippletest.net:51233";
+    let server;
+    if (network === "mainnet1") {
+      server = process.env.XRPL_MAINNET1_URL || "wss://xrplcluster.com";
+    } else if (network === "mainnet2") {
+      server =
+        process.env.XRPL_MAINNET2_URL ||
+        "wss://sparkling-winter-wind.xrp-mainnet.quiknode.pro/8c9ff2d4ce407cd3f6a0b3ba5484963ee5cad831/";
+    } else {
+      server =
+        process.env.XRPL_TESTNET_URL || "wss://s.altnet.rippletest.net:51233";
+    }
     const client = new xrpl.Client(server);
     await client.connect();
 
@@ -162,11 +172,9 @@ module.exports = async (req, res) => {
     });
   } catch (e) {
     console.error("ISSUE_FREEZE_ERROR", e);
-    return res
-      .status(500)
-      .json({
-        error: "ISSUE_FREEZE_ERROR",
-        message: String((e && e.message) || e),
-      });
+    return res.status(500).json({
+      error: "ISSUE_FREEZE_ERROR",
+      message: String((e && e.message) || e),
+    });
   }
 };
