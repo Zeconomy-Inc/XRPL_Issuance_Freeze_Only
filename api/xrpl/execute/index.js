@@ -137,6 +137,7 @@ module.exports = async (req, res) => {
     const payResult = await client.submitAndWait(signedPay.tx_blob);
 
     // 2) Optional: freeze (issuer side freeze on the trustline)
+    console.log("freeze", freeze);
     let freezeResult = null;
     if (freeze === true) {
       // Freeze is set via TrustSet with tfSetFreeze (issuer side / HighFreeze)
@@ -153,6 +154,7 @@ module.exports = async (req, res) => {
       const preparedT = await client.autofill(trustSet);
       const signedT = issuer.sign(preparedT);
       freezeResult = await client.submitAndWait(signedT.tx_blob);
+      console.log("freezeResult", freezeResult);
     }
 
     await client.disconnect();
