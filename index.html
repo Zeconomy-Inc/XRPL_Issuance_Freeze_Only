@@ -58,17 +58,18 @@
         <legend>Secrets</legend>
         <div class="row">
           <div class="col-6 secret-wrap">
-            <label for="issuerSecret">Issuer Secret</label>
-            <input type="password" id="issuerSecret" name="issuerSecret" placeholder="sEd…" required />
-            <button type="button" class="reveal" data-toggle="issuerSecret">Show</button>
-            <!-- Live preview rows -->
-            <div class="hint" id="issuerAddrRow" style="margin-top:6px; display:none;">
-              <strong>Address:</strong> <span id="issuerAddrText"></span>
-            </div>
-            <div class="hint" id="issuerPubKeyRow" style="margin-top:4px; display:none;">
-              <strong>Public Key:</strong> <span id="issuerPubKeyText"></span>
-            </div>
-          </div>
+  <label for="issuerSecret">Issuer Secret</label>
+  <input type="password" id="issuerSecret" name="issuerSecret" placeholder="sEd…" required />
+  <button type="button" class="reveal" data-toggle="issuerSecret">Show</button>
+
+  <!-- Derived values from backend -->
+  <div class="hint" style="margin-top:6px;">
+    <strong>Address:</strong> <span id="issuerAddrText">—</span>
+  </div>
+  <div class="hint" style="margin-top:4px;">
+    <strong>Public Key:</strong> <span id="issuerPubKeyText">—</span>
+  </div>
+</div>
 
           <div class="col-6">
             <label for="mode">Mode</label>
@@ -160,9 +161,6 @@
   </div>
 
   <!-- Prefer xrpl browser build; also load ripple-keypairs as a fallback -->
-  <script src="https://unpkg.com/xrpl@2.14.0/dist/browser/xrpl-latest-min.js"></script>
-  <script src="https://unpkg.com/ripple-keypairs@1.3.2/dist/npm/index.js"></script>
-
   <script>
     // Live address + public key preview under Issuer Secret
     (function () {
@@ -354,5 +352,55 @@
       }
     });
   </script>
+  <script>
+  (function () {
+    const seedEl = document.getElementById('issuerSecret');
+    const addrEl = document.getElementById('issuerAddrText');
+    const pubEl  = document.getElementById('issuerPubKeyText');
+
+    if (!seedEl || !addrEl || !pubEl) return;
+
+    let t = null;
+    const debounce = (fn, ms=250) => (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+
+    async function derive(seed) {
+      addrEl.textContent = '…';
+      pubEl.textContent  = '…';
+
+      if (!seed) {
+        addrEl.textContent = '—';
+        pubEl.textContent  = '—';
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/derive', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ seed })
+        });
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok || !data || !data.ok) {
+          const msg = (data && (data.message || data.error)) || `HTTP ${res.status}`;
+          addrEl.textContent = `Invalid seed — ${msg}`;
+          pubEl.textContent  = `Invalid seed — ${msg}`;
+          return;
+        }
+
+        addrEl.textContent = data.address || '(n/a)';
+        pubEl.textContent  = data.publicKey || '(n/a)';
+      } catch (err) {
+        addrEl.textContent = 'Error contacting backend';
+        pubEl.textContent  = 'Error contacting backend';
+      }
+    }
+
+    const onInput = debounce(() => derive(seedEl.value.trim()), 300);
+    seedEl.addEventListener('input', onInput);
+    document.addEventListener('DOMContentLoaded', onInput);
+  })();
+</script>
+
 </body>
 </html>
