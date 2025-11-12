@@ -16,7 +16,20 @@
     p.sub{margin:0 0 18px;color:var(--muted)}
 
     form{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
-    fieldset{grid-column:1/-1;border:1px solid var(--line);background:#fff;border-radius:12px;padding:14px}
+    fieldset {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+  flex: 1;                  /* allow equal growth */
+  min-width: 420px;         /* ensures consistent width */
+}
+
+.row-inline {
+  display: flex;
+  gap: 24px;                /* spacing between boxes */
+  flex-wrap: wrap;          /* wrap neatly on smaller screens */
+}
+
     legend{padding:0 8px;color:#324968;font-size:12px}
 
     .row{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
@@ -105,7 +118,9 @@
         <div class="card">
           <div class="row">
             <div class="col-12">
+              <fieldset>
               <legend style="padding:0 0 8px;display:block;color:#324968;font-size:12px">Token &amp; Trustline</legend>
+              </fieldset>
             </div>
             <div class="col-6">
               <label for="currencyCode">Currency Code</label>
@@ -133,7 +148,9 @@
         <div class="card">
           <div class="row">
             <div class="col-12">
+              <fieldset>
               <legend style="padding:0 0 8px;display:block;color:#324968;font-size:12px">Network</legend>
+              </fieldset>
             </div>
             <div class="col-6">
               <label for="network">Network</label>
